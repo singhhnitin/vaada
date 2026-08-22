@@ -1,12 +1,9 @@
 from openai import OpenAI
-import json
-import pandas as pd
-import time
-import os
-import random
-import logging
+import json, os, time, logging, random
 from pathlib import Path
 
+# ── Logging ──────────────────────────────────
+Path("data").mkdir(parents=True, exist_ok=True)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -17,474 +14,405 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
+# ── Client ───────────────────────────────────
 client = OpenAI(
     base_url="https://integrate.api.nvidia.com/v1",
     api_key=os.environ.get("NVIDIA_API_KEY")
 )
+MODEL  = "meta/llama-3.1-70b-instruct"
+BATCH  = 5       # safe size — JSON never truncates
+TOKENS = 1500    # enough for 5 samples
 
-# ─────────────────────────────────────────────
-# REAL FEW-SHOT EXAMPLES
-# Grounded in actual Indian NBFC/bank collection
-# patterns, RBI guidelines, ICICI/HDFC scripts
-# ─────────────────────────────────────────────
-
-FEW_SHOTS = {
-    "promise_to_pay": [
-        {
-            "dpd": 5,
-            "reminder": "Hi Rahul ji, aapki EMI ₹4500 ka due date kal tha. Abhi tak payment nahi aayi. Kripya aaj hi UPI se kar dein. Link: pay.rzp.io/xxx 🙏",
-            "reply": "haan bhai kal pakka kar dunga, aaj thoda busy tha office mein",
-            "ptp_date": "tomorrow",
-            "ptp_amount": 4500,
-            "tone": "polite"
-        },
-        {
-            "dpd": 12,
-            "reminder": "Amit ji, 2nd reminder - ₹8000 EMI 12 din se overdue hai. Aapka CIBIL score affect ho sakta hai. Aaj payment karein: pay.rzp.io/yyy",
-            "reply": "bhai friday ko salary aayegi pakka usse pehle transfer kar dunga 🙏🙏",
-            "ptp_date": "friday",
-            "ptp_amount": 8000,
-            "tone": "desperate"
-        },
-        {
-            "dpd": 3,
-            "reminder": "Priya mam, gentle reminder - ₹2200 EMI due hai. Please clear kar dein.",
-            "reply": "yes abhi kar deti hun 2 min mein",
-            "ptp_date": "immediate",
-            "ptp_amount": 2200,
-            "tone": "cooperative"
-        }
-    ],
-    "needs_more_time": [
-        {
-            "dpd": 8,
-            "reminder": "Suresh ji, ₹6500 overdue hai 8 din se. Please aaj settle karein warna late fees lagegi.",
-            "reply": "bhai sach mein paisa nahi h abhi, mummy hospital mein hain, 10 din aur do please 🙏",
-            "tone": "desperate",
-            "excuse_type": "family_emergency"
-        },
-        {
-            "dpd": 15,
-            "reminder": "Vikram ji, aapki ₹12000 EMI bahut overdue ho gayi hai. Turant contact karein.",
-            "reply": "yaar business mein thoda problem chal raha hai, next month pakka double kar dunga",
-            "tone": "evasive",
-            "excuse_type": "business_problem"
-        },
-        {
-            "dpd": 6,
-            "reminder": "Deepak bhai ₹3500 pending hai. Kab tak kar sakte ho?",
-            "reply": "kal pe deadline hai mere client ka, wo paise aate hi turant kar dunga bhai",
-            "tone": "polite",
-            "excuse_type": "waiting_for_payment"
-        }
-    ],
-    "partial_payment": [
-        {
-            "dpd": 10,
-            "reminder": "Neha ji, ₹9000 EMI overdue hai. Kripya full payment karein.",
-            "reply": "poora ek baar mein possible nahi hai, 4500 abhi kar sakti hun baaki 15 tarikh ko",
-            "ptp_amount_now": 4500,
-            "ptp_amount_later": 4500,
-            "ptp_date_later": "15th",
-            "tone": "cooperative"
-        },
-        {
-            "dpd": 20,
-            "reminder": "Ravi ji, ₹15000 bahut time se pending hai. Legal notice bhejni pad sakti hai.",
-            "reply": "bhai 5000 abhi bhejta hun baaki 2 hafte mein, settle ho jayega",
-            "ptp_amount_now": 5000,
-            "ptp_amount_later": 10000,
-            "tone": "worried"
-        }
-    ],
-    "dispute": [
-        {
-            "dpd": 7,
-            "reminder": "Anjali ji, ₹5500 EMI miss ho gayi hai. Please payment karein.",
-            "reply": "maine toh 3 din pehle hi UPI kar diya tha, aapke system mein kuch gadbad hai",
-            "dispute_type": "payment_already_made",
-            "tone": "angry"
-        },
-        {
-            "dpd": 4,
-            "reminder": "Amit ji, ₹7000 due hai aapka.",
-            "reply": "yeh amount galat hai, mera loan 6000 ka tha, extra charges kyun laga rahe ho",
-            "dispute_type": "wrong_amount",
-            "tone": "aggressive"
-        },
-        {
-            "dpd": 9,
-            "reminder": "Pooja ji, EMI pending hai please clear karein.",
-            "reply": "mujhe koi reminder nahi aaya tha, mujhe bataya hi nahi due date ke baare mein",
-            "dispute_type": "no_prior_notice",
-            "tone": "confused"
-        }
-    ],
-    "refusal": [
-        {
-            "dpd": 30,
-            "reminder": "Rajesh ji, ₹18000 bahut time se overdue hai. Legal action lena pad sakta hai.",
-            "reply": "band karo yeh messages, main court mein milta hun",
-            "tone": "aggressive"
-        },
-        {
-            "dpd": 25,
-            "reminder": "Sunita ji, please ₹11000 clear karein.",
-            "reply": "nahi kar sakta abhi, jo karna ho karo",
-            "tone": "resigned"
-        }
-    ]
-}
-
-# ─────────────────────────────────────────────
-# REAL SCENARIO PARAMETERS
-# Based on actual DPD stages used by Indian NBFCs
-# ─────────────────────────────────────────────
-
-DPD_STAGES = {
-    "soft":   {"range": (1, 15),  "tone": "polite, friendly"},
-    "mid":    {"range": (15, 30), "tone": "firm, urgent, mentions CIBIL"},
-    "hard":   {"range": (30, 60), "tone": "serious, legal notice warning"},
-    "severe": {"range": (60, 90), "tone": "legal action, settlement offer"},
-}
+# ── Domain Knowledge ─────────────────────────
+INTENTS = [
+    "promise_to_pay",
+    "needs_more_time",
+    "partial_payment",
+    "dispute",
+    "refusal"
+]
 
 REGIONS = {
-    "delhi": {
-        "style": "Direct, uses 'yaar', 'bhai', 'pakka', 'turant'",
-        "example_words": ["yaar", "bhai", "pakka", "turant", "sun", "bol"]
-    },
-    "mumbai": {
-        "style": "Casual, uses 'arre', 'nako', 're', 'kay', mix of Marathi",
-        "example_words": ["arre", "nako", "re", "kay", "thoda", "lagech"]
-    },
-    "hyderabad": {
-        "style": "Formal-ish, uses 'boss', 'anna', mix of Telugu words",
-        "example_words": ["boss", "anna", "enti", "okay ra", "definitely"]
-    },
-    "bangalore": {
-        "style": "Tech-savvy, mix of Kannada, formal English",
-        "example_words": ["sir", "illa", "bekku", "UPI maadtini", "transaction"]
-    }
+    "delhi":     "yaar, bhai, pakka, sun, turant, bol",
+    "mumbai":    "arre, nako, re, kay, thoda, lagech",
+    "hyderabad": "boss, anna, okay ra, definitely, enti",
+    "bangalore": "sir, illa, UPI maadtini, bekku, transaction",
 }
 
-LOAN_TYPES = [
+DPD = {
+    "soft":   (1,  15,  "polite, friendly, payment link"),
+    "mid":    (15, 30,  "firm, mentions CIBIL score impact"),
+    "hard":   (30, 60,  "serious, legal notice warning"),
+    "severe": (60, 90,  "settlement offer, legal action"),
+}
+
+LOANS = [
     "personal loan EMI",
-    "BNPL (Buy Now Pay Later)",
+    "BNPL payment",
     "credit line EMI",
     "bike loan EMI",
     "mobile loan EMI",
     "business loan EMI",
-    "education loan EMI"
 ]
 
-AMOUNTS = [1500, 2200, 3500, 4500, 5500, 6000,
-           7500, 8000, 9000, 10000, 12000, 15000,
-           18000, 22000, 25000]
+AMOUNTS = [
+    1500, 2200, 3500, 4500, 5500,
+    6000, 7500, 8000, 9000, 10000,
+    12000, 15000, 18000, 22000, 25000
+]
 
-# ─────────────────────────────────────────────
-# PROMPTS
-# ─────────────────────────────────────────────
-
-SINGLE_TURN_PROMPT = """You are generating training data for an AI payment 
-collections system for Indian fintech (Razorpay-like platform).
-
-Generate {n} realistic WhatsApp conversations between a collection agent 
-and a loan defaulter in India. These must reflect REAL Indian collections 
-scenarios, not generic templates.
-
-CONTEXT:
-- Loan type: {loan_type}
-- DPD (Days Past Due): {dpd} days
-- Stage tone: {stage_tone}
-- Region/dialect: {region} — {region_style}
-- Intent to generate: {intent}
-
-FEW-SHOT EXAMPLES of this intent (use as reference for style, NOT copy):
-{few_shots}
-
-STRICT RULES:
-1. Natural Hinglish code-switching — not forced, feels like real WhatsApp
-2. Agent messages must follow RBI rules: no threats, no calls to family,
-   no harassment — polite but firm
-3. Customer replies must feel psychologically real:
-   - stressed borrowers use more emoji and apologies
-   - angry customers are blunt and short
-   - evasive ones change topic or give vague timelines
-4. Include real Indian context: CIBIL score, UPI links, EMI, 
-   late fees, settlement offers where appropriate
-5. Vary the vocabulary — do not repeat same phrases across samples
-6. Typos and abbreviations are okay in customer messages
-
-Return ONLY valid JSON array. No markdown. No explanation:
-[
-  {{
-    "reminder": "agent WhatsApp message",
-    "reply": "customer WhatsApp reply",
-    "intent": "{intent}",
-    "dpd": {dpd},
-    "amount": <realistic amount>,
-    "loan_type": "{loan_type}",
-    "tone": "<polite|desperate|angry|evasive|cooperative|worried|resigned>",
-    "region": "{region}",
-    "ptp_date": "<tomorrow|specific day|next week|null>",
-    "ptp_amount": <amount or null>,
-    "dispute_type": "<wrong_amount|already_paid|no_notice|null>",
-    "excuse_type": "<family_emergency|job_loss|business_problem|
-                    waiting_for_payment|medical|null>",
-    "cibil_mentioned": <true|false>,
-    "legal_mentioned": <true|false>,
-    "settlement_offered": <true|false>
-  }}
-]"""
-
-MULTI_TURN_PROMPT = """Generate {n} realistic multi-turn WhatsApp collection 
-conversations for Indian fintech. Each conversation spans multiple days 
-and shows a realistic collections journey.
-
-CONTEXT:
-- Region: {region}
-- DPD start: {dpd} days overdue
-- Loan type: {loan_type}
-- Final outcome: {outcome}
-
-REALISTIC ESCALATION PATTERN to follow:
-Day 1: Soft reminder (polite, payment link)
-Day 3-4: Follow-up (firmer, mentions consequences)
-Day 7-10: Serious notice (CIBIL, legal warning)
-Day 15+: Settlement offer or legal action
-
-PSYCHOLOGICAL REALISM:
-- Customers who will pay: initially excuse, then commit, then pay
-- Customers who default: give vague promises, go silent, 
-  then dispute or refuse
-- Partial payers: negotiate terms across turns
-- Disputers: escalate complaint across turns
-
-Return ONLY valid JSON array:
-[
-  {{
-    "conversation_id": "conv_{idx}",
-    "loan_type": "{loan_type}",
-    "region": "{region}",
-    "total_amount": <amount>,
-    "final_outcome": "{outcome}",
-    "turns": [
-      {{
-        "day": <day number>,
-        "sender": "agent",
-        "message": "message text",
-        "dpd": <days past due at this point>
-      }},
-      {{
-        "day": <day number>,
-        "sender": "customer",
-        "message": "reply text",
-        "intent": "<intent>",
-        "tone": "<tone>",
-        "dpd": <same day>
-      }}
+# ── Real Few-Shot Examples ────────────────────
+# Grounded in actual ICICI/HDFC/NBFC collection
+# scripts and RBI-compliant communication patterns
+SHOTS = {
+    "promise_to_pay": [
+        ("Hi Rahul ji, ₹4500 EMI kal due thi. Aaj tak payment nahi aayi. "
+         "UPI se kar dein: rzp.io/pay 🙏",
+         "haan bhai kal pakka kar dunga, aaj office mein busy tha"),
+        ("Amit ji 2nd reminder — ₹8000 EMI 12 din overdue. CIBIL affect "
+         "hoga. Abhi karein: rzp.io/pay",
+         "bhai friday salary aayegi pakka usse pehle transfer 🙏🙏"),
     ],
-    "ptp_extracted": {{
-      "date_mentioned": "<date or null>",
-      "amount_mentioned": <amount or null>,
-      "kept": <true|false>
-    }},
-    "recovery_likelihood": "<high|medium|low>"
-  }}
-]"""
+    "needs_more_time": [
+        ("Suresh ji ₹6500 overdue 8 din. Late fees lag rahi hai aaj settle "
+         "karein.",
+         "bhai sach mein paisa nahi h, mummy hospital mein hain 10 din "
+         "aur do please 🙏"),
+        ("Vikram ji ₹12000 EMI bahut overdue. Turant contact karein.",
+         "yaar business mein problem chal raha next month double kar dunga"),
+    ],
+    "partial_payment": [
+        ("Neha ji ₹9000 EMI overdue. Full payment karein.",
+         "poora ek baar mein nahi hoga, 4500 abhi baaki 15 tarikh ko"),
+        ("Ravi ji ₹15000 pending. Legal notice aa sakta hai.",
+         "bhai 5000 abhi bhejta hun baaki 2 hafte mein pakka"),
+    ],
+    "dispute": [
+        ("Anjali ji ₹5500 EMI miss ho gayi. Payment karein.",
+         "maine 3 din pehle UPI kar diya tha aapke system mein gadbad hai"),
+        ("Amit ji ₹7000 due hai.",
+         "yeh amount galat hai mera loan 6000 ka tha extra charges kyun"),
+    ],
+    "refusal": [
+        ("Rajesh ji ₹18000 overdue. Legal action lena padega.",
+         "band karo yeh messages main court mein milta hun"),
+        ("Sunita ji ₹11000 clear karein please.",
+         "nahi kar sakta abhi jo karna ho karo"),
+    ],
+}
 
+# ── Prompt ───────────────────────────────────
+PROMPT = """\
+Generate {n} WhatsApp payment collection conversations (India, Hinglish).
 
-def build_few_shot_str(intent, n=2):
-    examples = FEW_SHOTS.get(intent, [])
-    selected = random.sample(examples, min(n, len(examples)))
-    return json.dumps(selected, ensure_ascii=False, indent=2)
+Setup:
+- Intent: {intent}
+- Loan: {loan}
+- DPD: {dpd} days overdue
+- Agent tone: {tone}
+- Region dialect words: {dialect}
 
+Reference examples (vary style, do NOT copy):
+{shots}
 
-def call_api(prompt, retries=3, wait=2):
+Rules:
+1. Natural Hinglish — real code-switching, not translation
+2. Agent: RBI-compliant, no threats, polite-firm
+3. Customer: psychologically real — stressed=emoji+apology,
+   angry=blunt+short, evasive=vague timelines
+4. Use: CIBIL, UPI, EMI, late fees, settlement where natural
+5. Different vocab each sample — no repetition
+
+Return ONLY a JSON array, no markdown, no explanation:
+[{{"reminder":"...","reply":"...","intent":"{intent}",
+   "dpd":{dpd},"amount":<int>,"loan":"{loan}",
+   "tone":"<polite|desperate|angry|evasive|cooperative|worried|resigned>",
+   "region":"{region}","ptp_date":"<day or null>",
+   "ptp_amount":<int or null>,"dispute_type":"<type or null>",
+   "excuse_type":"<type or null>","cibil_mentioned":<true|false>,
+   "legal_mentioned":<true|false>}}]
+"""
+
+# ── JSON Extractor ────────────────────────────
+def extract_json(raw: str):
+    """4-layer extraction — handles all model output formats."""
+    raw = raw.strip()
+
+    # Layer 1: direct parse
+    try:
+        return json.loads(raw)
+    except Exception:
+        pass
+
+    # Layer 2: strip markdown fences
+    for fence in ["```json", "```"]:
+        if fence in raw:
+            parts = raw.split(fence)
+            for p in parts:
+                p = p.strip().rstrip("`").strip()
+                try:
+                    return json.loads(p)
+                except Exception:
+                    pass
+
+    # Layer 3: find first [ ... last ]
+    start = raw.find("[")
+    end   = raw.rfind("]")
+    if start != -1 and end != -1 and end > start:
+        try:
+            return json.loads(raw[start:end+1])
+        except Exception:
+            pass
+
+    # Layer 4: salvage complete objects from truncated array
+    start = raw.find("[")
+    if start != -1:
+        partial = raw[start:]
+        depth, i, objs, buf = 0, 0, [], ""
+        in_str, escape = False, False
+        for ch in partial:
+            buf += ch
+            if escape:
+                escape = False
+                continue
+            if ch == "\\":
+                escape = True
+                continue
+            if ch == '"' and not escape:
+                in_str = not in_str
+            if not in_str:
+                if ch == "{":
+                    depth += 1
+                elif ch == "}":
+                    depth -= 1
+                    if depth == 0:
+                        try:
+                            obj = json.loads(buf.lstrip(",").strip())
+                            objs.append(obj)
+                            buf = ""
+                        except Exception:
+                            buf = ""
+        if objs:
+            log.warning(f"Salvaged {len(objs)} objects from truncated JSON")
+            return objs
+
+    return None
+
+# ── API Call ─────────────────────────────────
+def call_api(prompt: str, retries=3):
     for attempt in range(retries):
         try:
-            response = client.chat.completions.create(
-                model="meta/llama-3.1-70b-instruct",
+            resp = client.chat.completions.create(
+                model=MODEL,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.85,
-                max_tokens=4096,
+                max_tokens=TOKENS,
             )
-            raw = response.choices[0].message.content.strip()
-
-            # Clean markdown if model wraps in code block
-            if "```" in raw:
-                parts = raw.split("```")
-                for part in parts:
-                    part = part.strip()
-                    if part.startswith("json"):
-                        part = part[4:].strip()
-                    try:
-                        return json.loads(part)
-                    except Exception:
-                        continue
-
-            return json.loads(raw)
-
-        except json.JSONDecodeError as e:
-            log.warning(f"JSON parse error attempt {attempt+1}: {e}")
-            if attempt < retries - 1:
-                time.sleep(wait)
+            raw = resp.choices[0].message.content
+            result = extract_json(raw)
+            if result:
+                return result
+            log.warning(f"Extraction failed attempt {attempt+1}")
 
         except Exception as e:
-            log.error(f"API error attempt {attempt+1}: {e}")
-            if attempt < retries - 1:
-                time.sleep(wait * (attempt + 1))
+            code = getattr(e, "status_code", None)
+            if code == 429:
+                wait = 30 * (attempt + 1)
+                log.warning(f"Rate limited. Waiting {wait}s...")
+                time.sleep(wait)
+            elif code == 401:
+                log.error("Auth failed. Check NVIDIA_API_KEY.")
+                raise
+            else:
+                log.error(f"API error attempt {attempt+1}: {e}")
+                time.sleep(3 * (attempt + 1))
 
-    log.error("All retries failed for this batch")
     return []
 
+# ── Save JSONL ───────────────────────────────
+def append_jsonl(path: str, records: list):
+    with open(path, "a", encoding="utf-8") as f:
+        for r in records:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
-def generate_single_turn(per_intent=400):
-    all_data = []
-    intents = list(FEW_SHOTS.keys())
-    batch_size = 20
+# ── Single-Turn Generation ───────────────────
+def generate_single_turn(per_intent=200):
+    out = "data/raw/single_turn.jsonl"
+    Path(out).parent.mkdir(parents=True, exist_ok=True)
 
-    for intent in intents:
+    total = 0
+    for intent in INTENTS:
         log.info(f"\n=== Intent: {intent} ===")
-        intent_data = []
-        batches_needed = per_intent // batch_size
+        intent_total = 0
+        batches = per_intent // BATCH
+        shots_str = json.dumps(
+            SHOTS.get(intent, []), ensure_ascii=False
+        )
 
-        for i in range(batches_needed):
-            region = random.choice(list(REGIONS.keys()))
-            stage = random.choice(list(DPD_STAGES.keys()))
-            dpd = random.randint(*DPD_STAGES[stage]["range"])
-            loan_type = random.choice(LOAN_TYPES)
+        for i in range(batches):
+            stage      = random.choice(list(DPD.keys()))
+            lo, hi, tn = DPD[stage]
+            dpd        = random.randint(lo, hi)
+            region     = random.choice(list(REGIONS.keys()))
+            loan       = random.choice(LOANS)
 
-            prompt = SINGLE_TURN_PROMPT.format(
-                n=batch_size,
-                intent=intent,
-                dpd=dpd,
-                stage_tone=DPD_STAGES[stage]["tone"],
-                loan_type=loan_type,
-                region=region,
-                region_style=REGIONS[region]["style"],
-                few_shots=build_few_shot_str(intent)
+            prompt = PROMPT.format(
+                n       = BATCH,
+                intent  = intent,
+                loan    = loan,
+                dpd     = dpd,
+                tone    = tn,
+                dialect = REGIONS[region],
+                region  = region,
+                shots   = shots_str,
             )
 
             batch = call_api(prompt)
             if batch:
-                intent_data.extend(batch)
+                # Ensure required fields exist
+                clean = []
+                for rec in batch:
+                    if "reminder" in rec and "reply" in rec:
+                        rec.setdefault("intent", intent)
+                        rec.setdefault("region", region)
+                        rec.setdefault("dpd", dpd)
+                        rec.setdefault("loan", loan)
+                        clean.append(rec)
+
+                append_jsonl(out, clean)
+                intent_total += len(clean)
                 log.info(
-                    f"  Batch {i+1}/{batches_needed} "
-                    f"— {len(batch)} samples "
-                    f"[{region}, DPD:{dpd}, {stage}]"
+                    f"  [{i+1}/{batches}] +{len(clean)} "
+                    f"[{region}, DPD:{dpd}, {stage}] "
+                    f"total={intent_total}"
                 )
             else:
-                log.warning(f"  Batch {i+1} returned empty")
+                log.warning(f"  [{i+1}/{batches}] empty batch")
 
-            time.sleep(1.2)
+            time.sleep(1.0)
 
-        all_data.extend(intent_data)
-        log.info(f"  Subtotal for {intent}: {len(intent_data)}")
+        total += intent_total
+        log.info(f"  Subtotal {intent}: {intent_total}")
 
-    return pd.DataFrame(all_data)
+    log.info(f"\nSingle-turn total: {total}")
+    return out
 
+# ── Multi-Turn Generation ────────────────────
+MULTI_PROMPT = """\
+Generate {n} multi-turn WhatsApp loan collection threads (India, Hinglish).
+Each thread has 3-5 turns across multiple days showing a real collections arc.
 
-def generate_multi_turn(total=500):
-    all_convos = []
-    outcomes = ["paid_full", "paid_partial",
-                "defaulted", "disputed", "settled"]
-    batch_size = 10
+Region: {region} | Loan: {loan} | Start DPD: {dpd} | Outcome: {outcome}
+
+Arc patterns:
+- paid_full: excuses → commits → pays
+- paid_partial: negotiates → partial now → rest later
+- defaulted: vague promises → goes silent → no payment
+- disputed: claims already paid or wrong amount → escalates
+- settled: negotiates discount → agrees to settlement
+
+Return ONLY JSON array, no markdown:
+[{{"id":"c{idx}_{i}","loan":"{loan}","region":"{region}",
+   "amount":<int>,"outcome":"{outcome}",
+   "recovery_likelihood":"<high|medium|low>",
+   "ptp_kept":<true|false>,
+   "turns":[
+     {{"day":<int>,"sender":"agent","msg":"...","dpd":<int>}},
+     {{"day":<int>,"sender":"customer","msg":"...","intent":"...","tone":"..."}}
+   ]}}]
+"""
+
+def generate_multi_turn(total=200):
+    out = "data/raw/multi_turn.jsonl"
+    outcomes = [
+        "paid_full", "paid_partial",
+        "defaulted", "disputed", "settled"
+    ]
+    batches = total // BATCH
+    count   = 0
 
     log.info("\n=== Multi-turn generation ===")
 
-    for i in range(total // batch_size):
-        region = random.choice(list(REGIONS.keys()))
-        loan_type = random.choice(LOAN_TYPES)
+    for i in range(batches):
+        region  = random.choice(list(REGIONS.keys()))
+        loan    = random.choice(LOANS)
         outcome = random.choice(outcomes)
-        stage = random.choice(list(DPD_STAGES.keys()))
-        dpd = random.randint(*DPD_STAGES[stage]["range"])
+        stage   = random.choice(list(DPD.keys()))
+        lo, hi, _ = DPD[stage]
+        dpd     = random.randint(lo, hi)
 
-        prompt = MULTI_TURN_PROMPT.format(
-            n=batch_size,
-            idx=i * batch_size,
-            region=region,
-            loan_type=loan_type,
-            outcome=outcome,
-            dpd=dpd
+        prompt = MULTI_PROMPT.format(
+            n=BATCH, idx=i,
+            region=region, loan=loan,
+            dpd=dpd, outcome=outcome, i=i
         )
 
         batch = call_api(prompt)
         if batch:
-            all_convos.extend(batch)
+            append_jsonl(out, batch)
+            count += len(batch)
             log.info(
-                f"  Batch {i+1}/{total//batch_size} "
-                f"— {len(batch)} convos "
-                f"[{region}, {outcome}, DPD:{dpd}]"
+                f"  [{i+1}/{batches}] +{len(batch)} "
+                f"[{region}, {outcome}, DPD:{dpd}] "
+                f"total={count}"
             )
         else:
-            log.warning(f"  Batch {i+1} returned empty")
+            log.warning(f"  [{i+1}/{batches}] empty batch")
 
-        time.sleep(1.2)
+        time.sleep(1.0)
 
-    return all_convos
+    log.info(f"Multi-turn total: {count}")
+    return out
 
+# ── JSONL → CSV ──────────────────────────────
+def jsonl_to_splits(path: str):
+    import pandas as pd
+    records = []
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                try:
+                    records.append(json.loads(line))
+                except Exception:
+                    pass
 
-def validate_dataframe(df):
-    required = ["reminder", "reply", "intent",
-                "dpd", "amount", "tone", "region"]
-    missing = [c for c in required if c not in df.columns]
-    if missing:
-        log.warning(f"Missing columns: {missing}")
+    df = pd.DataFrame(records)
+    df = df.drop_duplicates(subset=["reminder", "reply"])
+    log.info(f"\nLoaded {len(df)} unique single-turn samples")
+    log.info(f"Intent dist:\n{df['intent'].value_counts()}")
+    log.info(f"Region dist:\n{df['region'].value_counts()}")
 
-    nulls = df[required].isnull().sum()
-    log.info(f"\nNull counts:\n{nulls}")
+    train = df.sample(frac=0.7, random_state=42)
+    rest  = df.drop(train.index)
+    val   = rest.sample(frac=0.5, random_state=42)
+    test  = rest.drop(val.index)
 
-    dupes = df.duplicated(subset=["reminder", "reply"]).sum()
-    log.info(f"Duplicate rows: {dupes}")
+    train.to_csv("data/raw/train.csv", index=False)
+    val.to_csv("data/raw/val.csv",     index=False)
+    test.to_csv("data/raw/test.csv",   index=False)
 
-    if dupes > 0:
-        df = df.drop_duplicates(subset=["reminder", "reply"])
-        log.info(f"After dedup: {len(df)} rows")
+    log.info(
+        f"Splits — Train:{len(train)} "
+        f"Val:{len(val)} Test:{len(test)}"
+    )
 
-    return df
-
-
+# ── Main ─────────────────────────────────────
 if __name__ == "__main__":
-    Path("data/raw").mkdir(parents=True, exist_ok=True)
-
     log.info("=" * 50)
     log.info("VAADA — Data Generation Pipeline")
     log.info("Vernacular Agentic AI for Debt & Arrears")
     log.info("=" * 50)
 
-    # ── Single-turn ──
-    log.info("\n[Phase 1] Single-turn conversations")
-    df = generate_single_turn(per_intent=400)
+    # Phase 1
+    single_path = generate_single_turn(per_intent=200)
+    jsonl_to_splits(single_path)
 
-    df = validate_dataframe(df)
-
-    train = df.sample(frac=0.7, random_state=42)
-    remaining = df.drop(train.index)
-    val = remaining.sample(frac=0.5, random_state=42)
-    test = remaining.drop(val.index)
-
-    train.to_csv("data/raw/train.csv", index=False)
-    val.to_csv("data/raw/val.csv", index=False)
-    test.to_csv("data/raw/test.csv", index=False)
-
-    log.info(f"\nTrain: {len(train)} | Val: {len(val)} | Test: {len(test)}")
-    log.info(f"\nIntent distribution:\n{df['intent'].value_counts()}")
-    log.info(f"\nRegion distribution:\n{df['region'].value_counts()}")
-    log.info(f"\nTone distribution:\n{df['tone'].value_counts()}")
-    log.info(f"\nDPD distribution:\n{df['dpd'].describe()}")
-
-    # ── Multi-turn ──
-    log.info("\n[Phase 2] Multi-turn conversations")
-    multi = generate_multi_turn(total=500)
-
-    with open("data/raw/multi_turn.json", "w",
-              encoding="utf-8") as f:
-        json.dump(multi, f, indent=2, ensure_ascii=False)
-
-    log.info(f"\nMulti-turn saved: {len(multi)} conversations")
+    # Phase 2
+    generate_multi_turn(total=200)
 
     log.info("\n" + "=" * 50)
-    log.info("Generation complete. Check data/raw/")
-    log.info("Logs saved to data/generation.log")
+    log.info("Done. Files in data/raw/")
     log.info("=" * 50)
+single_path = generate_single_turn(per_intent=600)
+generate_multi_turn(total=500)
