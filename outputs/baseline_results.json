@@ -1,0 +1,52 @@
+{
+  "model": "TF-IDF + Logistic Regression (Baseline)",
+  "val_accuracy": 0.9924,
+  "val_f1": 0.9924,
+  "test_accuracy": 0.989,
+  "test_f1": 0.989,
+  "per_class": {
+    "dispute": {
+      "precision": 0.9763779527559056,
+      "recall": 0.992,
+      "f1-score": 0.9841269841269842,
+      "support": 250
+    },
+    "needs_more_time": {
+      "precision": 0.993006993006993,
+      "recall": 1.0,
+      "f1-score": 0.9964912280701755,
+      "support": 284
+    },
+    "partial_payment": {
+      "precision": 0.9838187702265372,
+      "recall": 1.0,
+      "f1-score": 0.9918433931484503,
+      "support": 304
+    },
+    "promise_to_pay": {
+      "precision": 1.0,
+      "recall": 0.9936908517350158,
+      "f1-score": 0.9968354430379747,
+      "support": 317
+    },
+    "refusal": {
+      "precision": 0.9896551724137931,
+      "recall": 0.959866220735786,
+      "f1-score": 0.9745331069609509,
+      "support": 299
+    },
+    "accuracy": 0.9889958734525447,
+    "macro avg": {
+      "precision": 0.9885717776806457,
+      "recall": 0.9891114144941604,
+      "f1-score": 0.9887660310689071,
+      "support": 1454
+    },
+    "weighted avg": {
+      "precision": 0.9890620886544386,
+      "recall": 0.9889958734525447,
+      "f1-score": 0.9889531504437188,
+      "support": 1454
+    }
+  }
+}
