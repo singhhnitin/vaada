@@ -1,0 +1,111 @@
+{
+  "model": "GradientBoostingClassifier",
+  "val_report": {
+    "high": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 425
+    },
+    "low": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 817
+    },
+    "medium": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 212
+    },
+    "accuracy": 1.0,
+    "macro avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1454
+    },
+    "weighted avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1454
+    }
+  },
+  "test_report": {
+    "high": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 416
+    },
+    "low": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 804
+    },
+    "medium": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 234
+    },
+    "accuracy": 1.0,
+    "macro avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1454
+    },
+    "weighted avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1454
+    }
+  },
+  "top_features": [
+    {
+      "feature": "intent_score",
+      "importance": 0.42497480230976536
+    },
+    {
+      "feature": "composite_score",
+      "importance": 0.28067480266989303
+    },
+    {
+      "feature": "tone_score",
+      "importance": 0.19542721063617194
+    },
+    {
+      "feature": "dpd_normalized",
+      "importance": 0.07727049063622915
+    },
+    {
+      "feature": "is_soft_dpd",
+      "importance": 0.014840728740488267
+    },
+    {
+      "feature": "is_mid_dpd",
+      "importance": 0.004049222995332961
+    },
+    {
+      "feature": "has_strong_word",
+      "importance": 0.002750900573142469
+    },
+    {
+      "feature": "is_hard_dpd",
+      "importance": 8.479987614305393e-06
+    },
+    {
+      "feature": "has_ptp_amount",
+      "importance": 3.3355061079294136e-06
+    },
+    {
+      "feature": "reply_length",
+      "importance": 1.949519731975934e-08
+    }
+  ]
+}
