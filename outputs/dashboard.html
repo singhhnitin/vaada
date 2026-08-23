@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VAADA :: System Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green:      #00ff41;
+    --green-dim:  #00aa29;
+    --green-faint:#003311;
+    --yellow:     #ffd700;
+    --red:        #ff3131;
+    --blue:       #00cfff;
+    --bg:         #080808;
+    --bg2:        #0d0d0d;
+    --bg3:        #111111;
+    --border:     #1a3a1a;
+    --text:       #c8ffc8;
+    --text-dim:   #557755;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--green);
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.04) 2px,
+      rgba(0,0,0,0.04) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .topbar-left { display: flex; align-items: center; gap: 16px; }
+
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .dot-red    { background: #ff5f57; }
+  .dot-yellow { background: #febc2e; }
+  .dot-green  { background: #28c840; }
+  .dots { display: flex; gap: 6px; }
+
+  .topbar-title { color: var(--green); font-size: 12px; font-weight: 500; letter-spacing: 0.1em; }
+  .topbar-right  { color: var(--text-dim); font-size: 11px; }
+
+  .blink {
+    animation: blink 1s step-end infinite;
+    color: var(--green);
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* ── MAIN LAYOUT ── */
+  .shell {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 24px 48px;
+  }
+
+  /* ── PROMPT LINES ── */
+  .prompt {
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    font-size: 11px;
+  }
+  .prompt .ps1 { color: var(--green-dim); }
+  .prompt .cmd { color: var(--text); }
+
+  /* ── HERO ── */
+  .hero {
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    padding: 32px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+  }
+
+  .ascii-logo {
+    font-size: 11px;
+    line-height: 1.2;
+    color: var(--green);
+    font-weight: 700;
+    letter-spacing: 0;
+    margin-bottom: 20px;
+    white-space: pre;
+  }
+
+  .hero-sub {
+    color: var(--text-dim);
+    font-size: 12px;
+    margin-bottom: 28px;
+    border-left: 2px solid var(--green-dim);
+    padding-left: 12px;
+    line-height: 1.8;
+  }
+  .hero-sub span { color: var(--yellow); }
+
+  .hero-meta {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .hero-meta-item { font-size: 11px; }
+  .hero-meta-item .label { color: var(--text-dim); }
+  .hero-meta-item .value { color: var(--green); font-weight: 700; }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    margin-top: 32px;
+  }
+
+  .section-header .tag {
+    color: var(--text-dim);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .section-header .line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── METRICS GRID ── */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .metric-card {
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    padding: 20px;
+    position: relative;
+  }
+
+  .metric-card::after {
+    content: attr(data-index);
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 9px;
+    color: var(--text-dim);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+
+  .metric-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+  }
+
+  .metric-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--green);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .metric-value.yellow { color: var(--yellow); }
+  .metric-value.blue   { color: var(--blue); }
+
+  .metric-bar {
+    height: 2px;
+    background: var(--green-faint);
+    margin-top: 10px;
+  }
+
+  .metric-bar-fill {
+    height: 100%;
+    background: var(--green);
+    transition: width 1.5s cubic-bezier(.4,0,.2,1);
+  }
+
+  .metric-bar-fill.yellow { background: var(--yellow); }
+  .metric-bar-fill.blue   { background: var(--blue); }
+
+  .metric-sub {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 6px;
+  }
+
+  /* ── TABLE CARD ── */
+  .card {
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+
+  .card-title {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── ASCII BAR CHART ── */
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+
+  .bar-label {
+    width: 160px;
+    color: var(--text);
+    flex-shrink: 0;
+    font-size: 11px;
+  }
+
+  .bar-track {
+    flex: 1;
+    height: 16px;
+    background: var(--green-faint);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    background: var(--green);
+    display: flex;
+    align-items: center;
+    padding-left: 6px;
+    font-size: 10px;
+    color: var(--bg);
+    font-weight: 700;
+    transition: width 1.5s cubic-bezier(.4,0,.2,1);
+  }
+
+  .bar-fill.yellow { background: var(--yellow); }
+  .bar-fill.blue   { background: var(--blue); }
+  .bar-fill.red    { background: var(--red); }
+
+  .bar-count {
+    width: 60px;
+    text-align: right;
+    color: var(--text-dim);
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  /* ── TWO COLS ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* ── PIPELINE ── */
+  .pipeline {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-top: 4px;
+  }
+
+  .pipe-stage {
+    flex: 1;
+    border: 1px solid var(--border);
+    background: var(--bg3);
+    padding: 14px 12px;
+    position: relative;
+    text-align: center;
+  }
+
+  .pipe-stage.active {
+    border-color: var(--green);
+    background: var(--green-faint);
+  }
+
+  .pipe-stage + .pipe-stage::before {
+    content: '→';
+    position: absolute;
+    left: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--green-dim);
+    z-index: 1;
+    background: var(--bg);
+    font-size: 14px;
+  }
+
+  .pipe-name {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+
+  .pipe-metric {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--green);
+  }
+
+  .pipe-sub {
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* ── LIVE TERMINAL ── */
+  .live-terminal {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 20px;
+    font-size: 12px;
+    line-height: 1.8;
+    margin-bottom: 12px;
+    min-height: 200px;
+  }
+
+  .t-green  { color: var(--green); }
+  .t-yellow { color: var(--yellow); }
+  .t-blue   { color: var(--blue); }
+  .t-red    { color: var(--red); }
+  .t-dim    { color: var(--text-dim); }
+  .t-white  { color: var(--text); }
+  .t-bold   { font-weight: 700; }
+
+  /* ── REGION TABLE ── */
+  .tbl {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+
+  .tbl th {
+    color: var(--text-dim);
+    text-align: left;
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 10px;
+  }
+
+  .tbl td {
+    padding: 7px 12px;
+    border-bottom: 1px solid #0d1a0d;
+    color: var(--text);
+  }
+
+  .tbl tr:hover td { background: var(--green-faint); }
+
+  .badge {
+    display: inline-block;
+    padding: 1px 6px;
+    font-size: 9px;
+    border: 1px solid;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .badge-green  { border-color: var(--green);  color: var(--green); }
+  .badge-yellow { border-color: var(--yellow); color: var(--yellow); }
+  .badge-red    { border-color: var(--red);    color: var(--red); }
+  .badge-blue   { border-color: var(--blue);   color: var(--blue); }
+
+  /* ── DATASET STATS ── */
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid #0d1a0d;
+    font-size: 11px;
+  }
+
+  .stat-row:last-child { border-bottom: none; }
+  .stat-key   { color: var(--text-dim); }
+  .stat-value { color: var(--green); font-weight: 700; }
+
+  /* ── FOOTER ── */
+  .footer {
+    margin-top: 40px;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  /* ── ANIMATE IN ── */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: fadeIn 0.5s ease forwards;
+  }
+
+  @keyframes fadeIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-in:nth-child(1) { animation-delay: 0.1s; }
+  .fade-in:nth-child(2) { animation-delay: 0.2s; }
+  .fade-in:nth-child(3) { animation-delay: 0.3s; }
+  .fade-in:nth-child(4) { animation-delay: 0.4s; }
+
+  @media (max-width: 800px) {
+    .metrics-grid { grid-template-columns: 1fr 1fr; }
+    .two-col { grid-template-columns: 1fr; }
+    .pipeline { flex-direction: column; }
+    .pipe-stage + .pipe-stage::before { content: '↓'; left: 50%; top: -10px; transform: translateX(-50%); }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="dots">
+      <span class="dot dot-red"></span>
+      <span class="dot dot-yellow"></span>
+      <span class="dot dot-green"></span>
+    </div>
+    <span class="topbar-title">vaada — system dashboard v1.0.0</span>
+  </div>
+  <div class="topbar-right">
+    <span id="clock"></span> &nbsp;|&nbsp; nsingh@vaada<span class="blink">█</span>
+  </div>
+</div>
+
+<div class="shell">
+
+  <!-- PROMPT -->
+  <div class="prompt" style="margin-top:20px;">
+    <span class="ps1">nsingh@vaada:~/razorpay-buildathon$ </span>
+    <span class="cmd">python3 -m src.pipeline --mode=dashboard --eval=full</span>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="ascii-logo">
+██╗   ██╗ █████╗  █████╗ ██████╗  █████╗
+██║   ██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗
+██║   ██║███████║███████║██║  ██║███████║
+╚██╗ ██╔╝██╔══██║██╔══██║██║  ██║██╔══██║
+ ╚████╔╝ ██║  ██║██║  ██║██████╔╝██║  ██║
+  ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝</div>
+
+    <div class="hero-sub">
+      <span>Vernacular Agentic AI for Debt &amp; Arrears</span><br>
+      Razorpay AI Buildathon 2026 &nbsp;·&nbsp; Revenue Recovery Track<br>
+      First Hinglish <span>text-based</span> NLU system for payment collections —<br>
+      addresses the gap left by Razorpay's voice-only Hinglish stack (ElevenLabs, Sarvam AI)
+    </div>
+
+    <div class="hero-meta">
+      <div class="hero-meta-item">
+        <div class="label">AUTHOR</div>
+        <div class="value">Nitin Singh</div>
+      </div>
+      <div class="hero-meta-item">
+        <div class="label">TRACK</div>
+        <div class="value">Revenue Recovery</div>
+      </div>
+      <div class="hero-meta-item">
+        <div class="label">REPO</div>
+        <div class="value">github.com/singhhnitin/vaada</div>
+      </div>
+      <div class="hero-meta-item">
+        <div class="label">DEADLINE</div>
+        <div class="value">Sept 05 2026</div>
+      </div>
+      <div class="hero-meta-item">
+        <div class="label">STATUS</div>
+        <div class="value" style="color:var(--green)">● RUNNING</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KEY METRICS -->
+  <div class="section-header">
+    <span class="tag">// eval results</span>
+    <div class="line"></div>
+  </div>
+
+  <div class="metrics-grid">
+    <div class="metric-card fade-in" data-index="01">
+      <div class="metric-label">Intent Accuracy</div>
+      <div class="metric-value">98.9<span style="font-size:16px">%</span></div>
+      <div class="metric-bar"><div class="metric-bar-fill" data-width="98.9"></div></div>
+      <div class="metric-sub">F1=0.9890 · TF-IDF + LR baseline</div>
+    </div>
+    <div class="metric-card fade-in" data-index="02">
+      <div class="metric-label">PTP Detection</div>
+      <div class="metric-value yellow">82.2<span style="font-size:16px">%</span></div>
+      <div class="metric-bar"><div class="metric-bar-fill yellow" data-width="82.2"></div></div>
+      <div class="metric-sub">Promise-to-Pay extraction rate</div>
+    </div>
+    <div class="metric-card fade-in" data-index="03">
+      <div class="metric-label">Payment Links</div>
+      <div class="metric-value blue">42.9<span style="font-size:16px">%</span></div>
+      <div class="metric-bar"><div class="metric-bar-fill blue" data-width="42.9"></div></div>
+      <div class="metric-sub">Auto-generated per conversation</div>
+    </div>
+    <div class="metric-card fade-in" data-index="04">
+      <div class="metric-label">Dataset Size</div>
+      <div class="metric-value">9,693</div>
+      <div class="metric-bar"><div class="metric-bar-fill" data-width="100"></div></div>
+      <div class="metric-sub">First Hinglish fintech NLU dataset</div>
+    </div>
+  </div>
+
+  <!-- PIPELINE -->
+  <div class="section-header">
+    <span class="tag">// pipeline stages</span>
+    <div class="line"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">end-to-end inference flow</div>
+    <div class="pipeline">
+      <div class="pipe-stage active">
+        <div class="pipe-name">Input</div>
+        <div class="pipe-metric" style="font-size:13px">WhatsApp</div>
+        <div class="pipe-sub">Hinglish SMS/chat</div>
+      </div>
+      <div class="pipe-stage active">
+        <div class="pipe-name">Intent</div>
+        <div class="pipe-metric">98.9%</div>
+        <div class="pipe-sub">5 classes</div>
+      </div>
+      <div class="pipe-stage active">
+        <div class="pipe-name">PTP Extract</div>
+        <div class="pipe-metric">82.2%</div>
+        <div class="pipe-sub">date + amount</div>
+      </div>
+      <div class="pipe-stage active">
+        <div class="pipe-name">Recovery</div>
+        <div class="pipe-metric">100%</div>
+        <div class="pipe-sub">high/med/low</div>
+      </div>
+      <div class="pipe-stage active">
+        <div class="pipe-name">Action</div>
+        <div class="pipe-metric" style="font-size:13px">Agent</div>
+        <div class="pipe-sub">link / escalate</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW -->
+  <div class="two-col">
+
+    <!-- INTENT DISTRIBUTION -->
+    <div class="card">
+      <div class="card-title">intent classification — test set (n=1454)</div>
+      <div class="bar-row">
+        <div class="bar-label">promise_to_pay</div>
+        <div class="bar-track"><div class="bar-fill" data-width="21.8" style="width:0">21.8%</div></div>
+        <div class="bar-count">317</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">needs_more_time</div>
+        <div class="bar-track"><div class="bar-fill yellow" data-width="19.5" style="width:0">19.5%</div></div>
+        <div class="bar-count">284</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">partial_payment</div>
+        <div class="bar-track"><div class="bar-fill blue" data-width="20.9" style="width:0">20.9%</div></div>
+        <div class="bar-count">304</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">dispute</div>
+        <div class="bar-track"><div class="bar-fill" data-width="17.2" style="background:#aa7700;width:0">17.2%</div></div>
+        <div class="bar-count">250</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">refusal</div>
+        <div class="bar-track"><div class="bar-fill red" data-width="20.6" style="width:0">20.6%</div></div>
+        <div class="bar-count">299</div>
+      </div>
+    </div>
+
+    <!-- AGENT ACTIONS -->
+    <div class="card">
+      <div class="card-title">agent action distribution — test set</div>
+      <div class="bar-row">
+        <div class="bar-label">SEND_PARTIAL_LINK</div>
+        <div class="bar-track"><div class="bar-fill yellow" data-width="32.3" style="width:0">32.3%</div></div>
+        <div class="bar-count">469</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">FLAG_DISPUTE</div>
+        <div class="bar-track"><div class="bar-fill" data-width="17.5" style="background:#aa7700;width:0">17.5%</div></div>
+        <div class="bar-count">254</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">ESCALATE_SENIOR</div>
+        <div class="bar-track"><div class="bar-fill red" data-width="15.5" style="width:0">15.5%</div></div>
+        <div class="bar-count">226</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">SCHEDULE_FOLLOWUP</div>
+        <div class="bar-track"><div class="bar-fill blue" data-width="15.2" style="width:0">15.2%</div></div>
+        <div class="bar-count">221</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">SEND_FULL_LINK</div>
+        <div class="bar-track"><div class="bar-fill" data-width="10.7" style="width:0">10.7%</div></div>
+        <div class="bar-count">155</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE DEMO OUTPUT -->
+  <div class="section-header">
+    <span class="tag">// live pipeline output</span>
+    <div class="line"></div>
+  </div>
+
+  <div class="live-terminal" id="terminal-out">
+    <span class="t-dim">$ python3 -m src.pipeline --demo</span><br>
+    <span class="t-dim">Initializing VAADA Pipeline...</span><br>
+    <span class="t-green">✓ Intent classifier loaded &nbsp;&nbsp;[baseline_pipeline.pkl]</span><br>
+    <span class="t-green">✓ Recovery predictor loaded &nbsp;[recovery_predictor.pkl]</span><br>
+    <span class="t-green">✓ PTP extractor ready &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[rule-based + regex]</span><br>
+    <br>
+    <span class="t-dim">─────────────────────────── Case 1 ───────────────────────────</span><br>
+    <span class="t-dim">REMINDER : </span><span class="t-white">Rahul ji ₹5000 EMI 8 din overdue. Aaj payment karein: rzp.io/pay</span><br>
+    <span class="t-dim">REPLY    : </span><span class="t-yellow">bhai kal pakka kar dunga 🙏</span><br>
+    <span class="t-dim">─────────────────────────────────────────────────────────────</span><br>
+    <span class="t-dim">INTENT   : </span><span class="t-green t-bold">promise_to_pay</span><span class="t-dim"> (conf=1.00)</span><br>
+    <span class="t-dim">PTP DATE : </span><span class="t-green">tomorrow</span><br>
+    <span class="t-dim">RECOVERY : </span><span class="t-green t-bold">HIGH</span><span class="t-dim"> (conf=1.00)</span><br>
+    <span class="t-dim">ACTION   : </span><span class="t-blue t-bold">SEND_FULL_PAYMENT_LINK</span><br>
+    <span class="t-dim">LINK     : </span><span class="t-blue">https://rzp.io/l/rzp_f_91701</span><br>
+    <br>
+    <span class="t-dim">─────────────────────────── Case 2 ───────────────────────────</span><br>
+    <span class="t-dim">REMINDER : </span><span class="t-white">₹12000 business loan 20 din overdue. Settlement offer hai.</span><br>
+    <span class="t-dim">REPLY    : </span><span class="t-yellow">aadha abhi de sakta hun 6000 baaki 15 tarikh ko</span><br>
+    <span class="t-dim">─────────────────────────────────────────────────────────────</span><br>
+    <span class="t-dim">INTENT   : </span><span class="t-green t-bold">partial_payment</span><span class="t-dim"> (conf=0.88)</span><br>
+    <span class="t-dim">PTP DATE : </span><span class="t-green">15th</span><span class="t-dim"> · AMOUNT: ₹6000</span><br>
+    <span class="t-dim">RECOVERY : </span><span class="t-yellow t-bold">MEDIUM</span><span class="t-dim"> (conf=1.00)</span><br>
+    <span class="t-dim">ACTION   : </span><span class="t-blue t-bold">SEND_PARTIAL_PAYMENT_LINK</span><br>
+    <span class="t-dim">LINK     : </span><span class="t-blue">https://rzp.io/l/rzp_p_25537</span><br>
+    <br>
+    <span class="t-dim">─────────────────────────── Case 3 ───────────────────────────</span><br>
+    <span class="t-dim">REMINDER : </span><span class="t-white">₹18000 bahut time overdue. Legal action lena padega.</span><br>
+    <span class="t-dim">REPLY    : </span><span class="t-red">nahi karunga court mein milte hain</span><br>
+    <span class="t-dim">─────────────────────────────────────────────────────────────</span><br>
+    <span class="t-dim">INTENT   : </span><span class="t-red t-bold">refusal</span><span class="t-dim"> (conf=0.96)</span><br>
+    <span class="t-dim">PTP DATE : </span><span class="t-dim">null</span><br>
+    <span class="t-dim">RECOVERY : </span><span class="t-red t-bold">LOW</span><span class="t-dim"> (conf=1.00)</span><br>
+    <span class="t-dim">ACTION   : </span><span class="t-red t-bold">TRIGGER_LEGAL_NOTICE</span><br>
+    <br>
+    <span class="t-dim">──────────────────────── summary ─────────────────────────────</span><br>
+    <span class="t-green">Total processed : 1454</span><br>
+    <span class="t-green">Intent accuracy : 0.9890</span><br>
+    <span class="t-green">PTP detect rate : 0.8219</span><br>
+    <span class="t-green">Payment links   : 624 (42.9%)</span><br>
+    <span class="t-green">Status          : </span><span class="t-green t-bold">COMPLETE ✓</span><span class="blink"> █</span>
+  </div>
+
+  <!-- DATASET + REGION -->
+  <div class="two-col">
+
+    <div class="card">
+      <div class="card-title">dataset — vaada-hinglish-collections</div>
+      <div class="stat-row"><span class="stat-key">total_samples</span><span class="stat-value">9,693</span></div>
+      <div class="stat-row"><span class="stat-key">llm_generated</span><span class="stat-value">4,061</span></div>
+      <div class="stat-row"><span class="stat-key">augmented</span><span class="stat-value">5,632</span></div>
+      <div class="stat-row"><span class="stat-key">multi_turn_convos</span><span class="stat-value">355</span></div>
+      <div class="stat-row"><span class="stat-key">intent_classes</span><span class="stat-value">5</span></div>
+      <div class="stat-row"><span class="stat-key">regional_dialects</span><span class="stat-value">4 (Delhi/Mumbai/Hyd/Blr)</span></div>
+      <div class="stat-row"><span class="stat-key">dpd_range</span><span class="stat-value">1–90 days</span></div>
+      <div class="stat-row"><span class="stat-key">rbi_compliant</span><span class="stat-value">true</span></div>
+      <div class="stat-row"><span class="stat-key">public_prior_art</span><span class="stat-value" style="color:var(--red)">none (novel)</span></div>
+      <div class="stat-row"><span class="stat-key">train_split</span><span class="stat-value">70% / 10% / 10% (val/test)</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">regional dialect coverage</div>
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>Region</th>
+            <th>Dialect Marker</th>
+            <th>Samples</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Hyderabad</td>
+            <td class="t-dim">boss, anna, okay ra</td>
+            <td>1,024</td>
+            <td><span class="badge badge-green">ACTIVE</span></td>
+          </tr>
+          <tr>
+            <td>Bangalore</td>
+            <td class="t-dim">sir, illa, bekku</td>
+            <td>993</td>
+            <td><span class="badge badge-green">ACTIVE</span></td>
+          </tr>
+          <tr>
+            <td>Mumbai</td>
+            <td class="t-dim">arre, nako, re</td>
+            <td>940</td>
+            <td><span class="badge badge-green">ACTIVE</span></td>
+          </tr>
+          <tr>
+            <td>Delhi</td>
+            <td class="t-dim">yaar, bhai, pakka</td>
+            <td>924</td>
+            <td><span class="badge badge-green">ACTIVE</span></td>
+          </tr>
+          <tr>
+            <td>Others</td>
+            <td class="t-dim">mixed</td>
+            <td>82</td>
+            <td><span class="badge badge-yellow">MINOR</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- WHAT RAZORPAY DOESNT HAVE -->
+  <div class="section-header">
+    <span class="tag">// gap analysis</span>
+    <div class="line"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">razorpay existing vs vaada</div>
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Capability</th>
+          <th>Razorpay (existing)</th>
+          <th>VAADA</th>
+          <th>Gap</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Hinglish voice NLU</td>
+          <td><span class="badge badge-green">ElevenLabs + Sarvam</span></td>
+          <td class="t-dim">—</td>
+          <td><span class="badge badge-green">SOLVED</span></td>
+        </tr>
+        <tr>
+          <td>Hinglish text NLU (WhatsApp/SMS)</td>
+          <td><span class="badge badge-red">NONE</span></td>
+          <td><span class="badge badge-green">VAADA</span></td>
+          <td><span class="badge badge-green">SOLVED ✓</span></td>
+        </tr>
+        <tr>
+          <td>Intent classification (5 classes)</td>
+          <td><span class="badge badge-red">NONE</span></td>
+          <td><span class="badge badge-green">F1=0.989</span></td>
+          <td><span class="badge badge-green">SOLVED ✓</span></td>
+        </tr>
+        <tr>
+          <td>Promise-to-Pay extraction</td>
+          <td><span class="badge badge-red">NONE</span></td>
+          <td><span class="badge badge-green">82.2%</span></td>
+          <td><span class="badge badge-green">SOLVED ✓</span></td>
+        </tr>
+        <tr>
+          <td>Recovery likelihood scoring</td>
+          <td><span class="badge badge-red">NONE</span></td>
+          <td><span class="badge badge-green">F1=1.00</span></td>
+          <td><span class="badge badge-green">SOLVED ✓</span></td>
+        </tr>
+        <tr>
+          <td>Regional Hinglish dialect support</td>
+          <td><span class="badge badge-yellow">PARTIAL (voice)</span></td>
+          <td><span class="badge badge-green">4 regions</span></td>
+          <td><span class="badge badge-green">EXPANDED ✓</span></td>
+        </tr>
+        <tr>
+          <td>Hinglish fintech dataset (public)</td>
+          <td><span class="badge badge-red">NONE</span></td>
+          <td><span class="badge badge-green">9,693 samples</span></td>
+          <td><span class="badge badge-green">NOVEL ✓</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span>VAADA v1.0.0 · Razorpay AI Buildathon 2026 · Revenue Recovery Track</span>
+    <span>github.com/singhhnitin/vaada · nsingh@dino</span>
+  </div>
+
+</div>
+
+<script>
+  // Clock
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.toISOString().replace('T', ' ').substring(0, 19) + ' IST';
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // Animate bars on load
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      document.querySelectorAll('.metric-bar-fill').forEach(el => {
+        el.style.width = el.dataset.width + '%';
+      });
+      document.querySelectorAll('.bar-fill').forEach(el => {
+        el.style.width = el.dataset.width + '%';
+      });
+    }, 300);
+  });
+</script>
+</body>
+</html>
