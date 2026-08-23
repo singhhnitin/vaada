@@ -1,21 +1,11 @@
 nohup: ignoring input
-2026-08-22 09:13:01,563 [INFO] ==================================================
-2026-08-22 09:13:01,563 [INFO] VAADA — Data Generation Pipeline
-2026-08-22 09:13:01,563 [INFO] Vernacular Agentic AI for Debt & Arrears
-2026-08-22 09:13:01,563 [INFO] ==================================================
-2026-08-22 09:13:01,564 [INFO] 
+2026-08-23 18:10:26,847 [INFO] ==================================================
+2026-08-23 18:10:26,847 [INFO] VAADA — Data Generation Pipeline
+2026-08-23 18:10:26,847 [INFO] Vernacular Agentic AI for Debt & Arrears
+2026-08-23 18:10:26,847 [INFO] ==================================================
+2026-08-23 18:10:26,847 [INFO] 
 === Intent: promise_to_pay ===
-2026-08-22 09:14:32,107 [INFO] HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
-2026-08-22 09:14:32,139 [INFO]   [1/40] +5 [mumbai, DPD:30, mid] total=5
-2026-08-22 09:15:05,422 [INFO] HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
-2026-08-22 09:15:05,423 [INFO]   [2/40] +5 [mumbai, DPD:30, mid] total=10
-2026-08-22 09:16:43,960 [INFO] HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
-2026-08-22 09:16:43,961 [INFO]   [3/40] +5 [delhi, DPD:30, mid] total=15
-2026-08-22 09:17:21,408 [INFO] HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
-2026-08-22 09:17:21,410 [INFO]   [4/40] +5 [delhi, DPD:15, soft] total=20
-2026-08-22 09:18:08,565 [INFO] HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
-2026-08-22 09:18:08,567 [INFO]   [5/40] +5 [bangalore, DPD:22, mid] total=25
-2026-08-22 09:18:41,870 [INFO] HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
-2026-08-22 09:18:41,872 [INFO]   [6/40] +5 [delhi, DPD:9, soft] total=30
-2026-08-22 09:19:35,871 [INFO] HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
-2026-08-22 09:19:35,873 [INFO]   [7/40] +5 [bangalore, DPD:62, severe] total=35
+2026-08-23 18:11:30,637 [INFO] HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-23 18:11:30,667 [INFO]   [1/40] +5 [delhi, DPD:39, hard] total=5
+2026-08-23 18:12:21,812 [INFO] HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-23 18:12:21,813 [INFO]   [2/40] +5 [hyderabad, DPD:90, severe] total=10
