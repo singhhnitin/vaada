@@ -1,0 +1,304 @@
+{
+  "total": 1454,
+  "intent_accuracy": 0.989,
+  "ptp_rate": 0.8219,
+  "link_rate": 0.4292,
+  "links_sent": 624,
+  "action_dist": {
+    "SEND_PARTIAL_PAYMENT_LINK": 469,
+    "SEND_FULL_PAYMENT_LINK": 155,
+    "SEND_SETTLEMENT_OFFER": 65,
+    "SCHEDULE_FOLLOWUP": 221,
+    "FLAG_FOR_HUMAN_REVIEW": 254,
+    "TRIGGER_LEGAL_NOTICE": 64,
+    "ESCALATE_TO_SENIOR_TEAM": 226
+  },
+  "risk_dist": {
+    "low": 155,
+    "medium": 944,
+    "high": 291,
+    "critical": 64
+  },
+  "sample_outputs": [
+    {
+      "timestamp": "2026-08-23T19:40:01.469809",
+      "input": {
+        "reminder": "Sir, ₹10000 EMI 24 din ho gaye. CIBIL score impact hoga. UPI se karein: rzp.io/pay",
+        "reply": "🙏 sir maaf kijiye, ghar ki kuch problems thi. Abhi transfer karunga",
+        "dpd": 24,
+        "amount": 10000.0,
+        "region": "bangalore"
+      },
+      "intent": {
+        "intent": "promise_to_pay",
+        "confidence": 0.9946,
+        "all_probs": {
+          "dispute": 0.0019,
+          "needs_more_time": 0.0005,
+          "partial_payment": 0.0003,
+          "promise_to_pay": 0.9946,
+          "refusal": 0.0028
+        }
+      },
+      "ptp": {
+        "has_ptp": true,
+        "ptp_date": {
+          "raw": null,
+          "days_from_now": null,
+          "confidence": 0.0
+        },
+        "ptp_amount": {
+          "amount": 5000.0,
+          "is_partial": true,
+          "confidence": 0.5
+        },
+        "commitment_strength": "moderate",
+        "follow_up_in_days": null
+      },
+      "recovery": {
+        "likelihood": "high",
+        "confidence": 1.0,
+        "proba": {
+          "high": 1.0,
+          "low": 0.0,
+          "medium": 0.0
+        }
+      },
+      "action": {
+        "action": "SEND_PARTIAL_PAYMENT_LINK",
+        "payment_link": {
+          "link_id": "rzp_p_19329",
+          "url": "https://rzp.io/l/rzp_p_19329",
+          "amount": 5000.0
+        },
+        "message": "Partial payment link of ₹5000 bhej rahe hain.",
+        "follow_up_in": 2,
+        "risk": "medium"
+      }
+    },
+    {
+      "timestamp": "2026-08-23T19:40:01.485356",
+      "input": {
+        "reminder": "Rohan ji, ₹4200 EMI 3 din ho gaye. CIBIL affect hoga. UPI se kar dein: rzp.io/pay",
+        "reply": "Abhi salary nahi aayi, next week pakka kar dunga",
+        "dpd": 3,
+        "amount": 4200.0,
+        "region": "bangalore"
+      },
+      "intent": {
+        "intent": "promise_to_pay",
+        "confidence": 0.9999,
+        "all_probs": {
+          "dispute": 0.0,
+          "needs_more_time": 0.0,
+          "partial_payment": 0.0,
+          "promise_to_pay": 0.9999,
+          "refusal": 0.0
+        }
+      },
+      "ptp": {
+        "has_ptp": true,
+        "ptp_date": {
+          "raw": "next week",
+          "days_from_now": 7,
+          "confidence": 0.9
+        },
+        "ptp_amount": {
+          "amount": null,
+          "is_partial": false,
+          "confidence": 0.0
+        },
+        "commitment_strength": "strong",
+        "follow_up_in_days": 8
+      },
+      "recovery": {
+        "likelihood": "high",
+        "confidence": 1.0,
+        "proba": {
+          "high": 1.0,
+          "low": 0.0,
+          "medium": 0.0
+        }
+      },
+      "action": {
+        "action": "SEND_FULL_PAYMENT_LINK",
+        "payment_link": {
+          "link_id": "rzp_f_32660",
+          "url": "https://rzp.io/l/rzp_f_32660",
+          "amount": 4200.0
+        },
+        "message": "Payment link of ₹4200 bhej rahe hain.",
+        "follow_up_in": 8,
+        "risk": "low"
+      }
+    },
+    {
+      "timestamp": "2026-08-23T19:40:01.500661",
+      "input": {
+        "reminder": "Hi Rahul ji, ₹3800 EMI 3 din ho gaye. UPI se kar dein: rzp.io/pay. Late fees bhi lagega",
+        "reply": "Abhi kuch din mein kar dunga",
+        "dpd": 3,
+        "amount": 3800.0,
+        "region": "bangalore"
+      },
+      "intent": {
+        "intent": "promise_to_pay",
+        "confidence": 0.9998,
+        "all_probs": {
+          "dispute": 0.0001,
+          "needs_more_time": 0.0,
+          "partial_payment": 0.0,
+          "promise_to_pay": 0.9998,
+          "refusal": 0.0001
+        }
+      },
+      "ptp": {
+        "has_ptp": true,
+        "ptp_date": {
+          "raw": null,
+          "days_from_now": null,
+          "confidence": 0.0
+        },
+        "ptp_amount": {
+          "amount": 1900.0,
+          "is_partial": true,
+          "confidence": 0.5
+        },
+        "commitment_strength": "moderate",
+        "follow_up_in_days": null
+      },
+      "recovery": {
+        "likelihood": "high",
+        "confidence": 1.0,
+        "proba": {
+          "high": 1.0,
+          "low": 0.0,
+          "medium": 0.0
+        }
+      },
+      "action": {
+        "action": "SEND_PARTIAL_PAYMENT_LINK",
+        "payment_link": {
+          "link_id": "rzp_p_92580",
+          "url": "https://rzp.io/l/rzp_p_92580",
+          "amount": 1900.0
+        },
+        "message": "Partial payment link of ₹1900 bhej rahe hain.",
+        "follow_up_in": 2,
+        "risk": "medium"
+      }
+    },
+    {
+      "timestamp": "2026-08-23T19:40:01.515840",
+      "input": {
+        "reminder": "Nako ji, ₹8000 EMI 22 din overdue. Late fees bhi lagega, abhi karein: rzp.io/pay",
+        "reply": "bhai sorry, office mein thoda problem hai. 15th ko salary aayegi, usse pehle kar dunga 🙏",
+        "dpd": 22,
+        "amount": 8000.0,
+        "region": "mumbai"
+      },
+      "intent": {
+        "intent": "promise_to_pay",
+        "confidence": 0.9996,
+        "all_probs": {
+          "dispute": 0.0,
+          "needs_more_time": 0.0002,
+          "partial_payment": 0.0001,
+          "promise_to_pay": 0.9996,
+          "refusal": 0.0
+        }
+      },
+      "ptp": {
+        "has_ptp": true,
+        "ptp_date": {
+          "raw": null,
+          "days_from_now": null,
+          "confidence": 0.0
+        },
+        "ptp_amount": {
+          "amount": 4000.0,
+          "is_partial": true,
+          "confidence": 0.5
+        },
+        "commitment_strength": "moderate",
+        "follow_up_in_days": null
+      },
+      "recovery": {
+        "likelihood": "high",
+        "confidence": 1.0,
+        "proba": {
+          "high": 1.0,
+          "low": 0.0,
+          "medium": 0.0
+        }
+      },
+      "action": {
+        "action": "SEND_PARTIAL_PAYMENT_LINK",
+        "payment_link": {
+          "link_id": "rzp_p_56586",
+          "url": "https://rzp.io/l/rzp_p_56586",
+          "amount": 4000.0
+        },
+        "message": "Partial payment link of ₹4000 bhej rahe hain.",
+        "follow_up_in": 2,
+        "risk": "medium"
+      }
+    },
+    {
+      "timestamp": "2026-08-23T19:40:01.530580",
+      "input": {
+        "reminder": "Amit ji, ₹6000 EMI 22 din overdue. Late fees bhi lagega, abhi karein: rzp.io/pay",
+        "reply": "bhai thoda busy hoon, abhi nahi kar sakta. Kab tak ka time do sakte ho?",
+        "dpd": 22,
+        "amount": 6000.0,
+        "region": "mumbai"
+      },
+      "intent": {
+        "intent": "promise_to_pay",
+        "confidence": 0.9983,
+        "all_probs": {
+          "dispute": 0.0001,
+          "needs_more_time": 0.0012,
+          "partial_payment": 0.0002,
+          "promise_to_pay": 0.9983,
+          "refusal": 0.0002
+        }
+      },
+      "ptp": {
+        "has_ptp": true,
+        "ptp_date": {
+          "raw": null,
+          "days_from_now": null,
+          "confidence": 0.0
+        },
+        "ptp_amount": {
+          "amount": 3000.0,
+          "is_partial": true,
+          "confidence": 0.5
+        },
+        "commitment_strength": "moderate",
+        "follow_up_in_days": null
+      },
+      "recovery": {
+        "likelihood": "high",
+        "confidence": 1.0,
+        "proba": {
+          "high": 1.0,
+          "low": 0.0,
+          "medium": 0.0
+        }
+      },
+      "action": {
+        "action": "SEND_PARTIAL_PAYMENT_LINK",
+        "payment_link": {
+          "link_id": "rzp_p_14096",
+          "url": "https://rzp.io/l/rzp_p_14096",
+          "amount": 3000.0
+        },
+        "message": "Partial payment link of ₹3000 bhej rahe hain.",
+        "follow_up_in": 2,
+        "risk": "medium"
+      }
+    }
+  ]
+}
