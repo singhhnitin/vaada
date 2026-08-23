@@ -1,0 +1,186 @@
+{
+  "date_recall": 0.6246,
+  "amount_recall": 0.3754,
+  "samples": [
+    {
+      "reply": "🙏 sir maaf kijiye, ghar ki kuch problems thi. Abhi transfer karunga",
+      "extracted_date": null,
+      "gt_date": "today",
+      "extracted_amount": 5000.0,
+      "gt_amount": 10000.0,
+      "commitment": "moderate",
+      "has_ptp": true
+    },
+    {
+      "reply": "Abhi salary nahi aayi, next week pakka kar dunga",
+      "extracted_date": "next week",
+      "gt_date": "next_week",
+      "extracted_amount": null,
+      "gt_amount": 4200.0,
+      "commitment": "strong",
+      "has_ptp": true
+    },
+    {
+      "reply": "Abhi kuch din mein kar dunga",
+      "extracted_date": null,
+      "gt_date": "nan",
+      "extracted_amount": 1900.0,
+      "gt_amount": 3800.0,
+      "commitment": "moderate",
+      "has_ptp": true
+    },
+    {
+      "reply": "bhai sorry, office mein thoda problem hai. 15th ko salary aayegi, usse pehle kar dunga 🙏",
+      "extracted_date": null,
+      "gt_date": "15th",
+      "extracted_amount": 4000.0,
+      "gt_amount": 8000.0,
+      "commitment": "moderate",
+      "has_ptp": true
+    },
+    {
+      "reply": "bhai thoda busy hoon, abhi nahi kar sakta. Kab tak ka time do sakte ho?",
+      "extracted_date": null,
+      "gt_date": "nan",
+      "extracted_amount": 3000.0,
+      "gt_amount": NaN,
+      "commitment": "moderate",
+      "has_ptp": true
+    },
+    {
+      "reply": "bhai friday ko salary aayegi, usse pehle karwa dunga pakka 🙏🙏",
+      "extracted_date": "friday",
+      "gt_date": "friday",
+      "extracted_amount": 2100.0,
+      "gt_amount": 4200.0,
+      "commitment": "strong",
+      "has_ptp": true
+    },
+    {
+      "reply": "bhai abhi office mein hoon, ghar aakar karwa dunga. Aapne koi notice bheja?",
+      "extracted_date": null,
+      "gt_date": "ghar aakar",
+      "extracted_amount": null,
+      "gt_amount": 1800.0,
+      "commitment": "none",
+      "has_ptp": false
+    },
+    {
+      "reply": "Bhai, abhi kuch problem ho raha hai. Next month mein double EMI karta hoon",
+      "extracted_date": null,
+      "gt_date": "next month",
+      "extracted_amount": 6000.0,
+      "gt_amount": 24000.0,
+      "commitment": "moderate",
+      "has_ptp": true
+    },
+    {
+      "reply": "sorry sir, kuchh financial issues ho gaye, can we settle for ₹700?",
+      "extracted_date": null,
+      "gt_date": "nan",
+      "extracted_amount": 700.0,
+      "gt_amount": 700.0,
+      "commitment": "moderate",
+      "has_ptp": true
+    },
+    {
+      "reply": "bhai thoda patience rakhna, aaj hi karta hun 🙏",
+      "extracted_date": "today",
+      "gt_date": "today",
+      "extracted_amount": 2250.0,
+      "gt_amount": 4500.0,
+      "commitment": "moderate",
+      "has_ptp": true
+    },
+    {
+      "reply": "Bhai, thoda time do. Kal salary aayegi, usse pehle transfer kar dunga 🙏",
+      "extracted_date": "tomorrow",
+      "gt_date": "tomorrow",
+      "extracted_amount": 6000.0,
+      "gt_amount": 12000.0,
+      "commitment": "moderate",
+      "has_ptp": true
+    },
+    {
+      "reply": "arre bhai sorry 🙏 kal payment kar dete hain. office mein thoda busy chal raha hai. thodi fees bhi lagech kya?",
+      "extracted_date": "tomorrow",
+      "gt_date": "kal",
+      "extracted_amount": 1900.0,
+      "gt_amount": 3800.0,
+      "commitment": "moderate",
+      "has_ptp": true
+    },
+    {
+      "reply": "kal office mein busy tha, aaj evening mein pakka kar dunga",
+      "extracted_date": "tomorrow",
+      "gt_date": "today",
+      "extracted_amount": null,
+      "gt_amount": 8000.0,
+      "commitment": "strong",
+      "has_ptp": true
+    },
+    {
+      "reply": "bhai sorry, kal tak pakka karwa dunga, aaj thoda busy tha, aur bhai please late fees mat lagaana 🙏",
+      "extracted_date": "tomorrow",
+      "gt_date": "tomorrow",
+      "extracted_amount": 14000.0,
+      "gt_amount": 28000.0,
+      "commitment": "strong",
+      "has_ptp": true
+    },
+    {
+      "reply": "thik hai bhai, abhi kar rahe hain, transaction Reference no. 12345 hai",
+      "extracted_date": null,
+      "gt_date": "nan",
+      "extracted_amount": null,
+      "gt_amount": 4200.0,
+      "commitment": "none",
+      "has_ptp": false
+    },
+    {
+      "reply": "ok sir, ₹10000 kar deta hoon. Thoda time do, account balance transfer karne me",
+      "extracted_date": null,
+      "gt_date": "nan",
+      "extracted_amount": 10000.0,
+      "gt_amount": 10000.0,
+      "commitment": "moderate",
+      "has_ptp": true
+    },
+    {
+      "reply": "Arre bhai kal payment kar dunga, abhi ghar mein kuch kaam hai 🙏",
+      "extracted_date": "tomorrow",
+      "gt_date": "kal",
+      "extracted_amount": 1750.0,
+      "gt_amount": 3500.0,
+      "commitment": "moderate",
+      "has_ptp": true
+    },
+    {
+      "reply": "Bhai thoda time chahiye, settlement kar loon kya?",
+      "extracted_date": null,
+      "gt_date": "nan",
+      "extracted_amount": 1250.0,
+      "gt_amount": NaN,
+      "commitment": "moderate",
+      "has_ptp": true
+    },
+    {
+      "reply": "bhai sun, kal pakka kar dunga, aaj ghar par kuch issue tha 🤕",
+      "extracted_date": "tomorrow",
+      "gt_date": "tomorrow",
+      "extracted_amount": 1250.0,
+      "gt_amount": 2500.0,
+      "commitment": "strong",
+      "has_ptp": true
+    },
+    {
+      "reply": "bekku sir, kal se office kaam mein busy tha. Monday ko pakka kar dunga 🙏",
+      "extracted_date": "tomorrow",
+      "gt_date": "monday",
+      "extracted_amount": null,
+      "gt_amount": 3800.0,
+      "commitment": "strong",
+      "has_ptp": true
+    }
+  ]
+}
