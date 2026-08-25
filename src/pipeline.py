@@ -1,7 +1,5 @@
 """
-pipeline.py — VAADA End-to-End Pipeline
-Input: raw Hinglish WhatsApp conversation
-Output: intent, PTP extraction, recovery likelihood, agent action
+pipeline.py — VAADA End-to-End Pipeline with Real Razorpay API
 """
 
 import os
@@ -15,30 +13,27 @@ from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.nlu.ptp_extractor import extract_ptp
-from src.nlu.recovery_predictor import engineer_features, create_labels
+from src.nlu.recovery_predictor import engineer_features
+from src.agent.razorpay_client import create_payment_link, create_partial_payment_link
 
 # ── Load models ───────────────────────────────────────────────
 def load_models():
     models = {}
 
-    # Baseline intent classifier
     baseline_path = "models/baseline_pipeline.pkl"
     if os.path.exists(baseline_path):
         with open(baseline_path, "rb") as f:
             models["intent_classifier"] = pickle.load(f)
         print("Intent classifier loaded.")
     else:
-        print("WARNING: baseline_pipeline.pkl not found.")
         models["intent_classifier"] = None
 
-    # Recovery predictor
     recovery_path = "models/recovery_predictor.pkl"
     if os.path.exists(recovery_path):
         with open(recovery_path, "rb") as f:
             models["recovery_predictor"] = pickle.load(f)
         print("Recovery predictor loaded.")
     else:
-        print("WARNING: recovery_predictor.pkl not found.")
         models["recovery_predictor"] = None
 
     return models
@@ -48,95 +43,92 @@ def classify_intent(classifier, reminder: str, reply: str) -> dict:
     if classifier is None:
         return {"intent": "unknown", "confidence": 0.0, "all_probs": {}}
 
-    text = reminder + " [SEP] " + reply
-    intent = classifier.predict([text])[0]
-    probs  = classifier.predict_proba([text])[0]
+    text    = reminder + " [SEP] " + reply
+    intent  = classifier.predict([text])[0]
+    probs   = classifier.predict_proba([text])[0]
     classes = classifier.classes_
 
     return {
         "intent":     intent,
         "confidence": float(round(max(probs), 4)),
-        "all_probs":  {
-            c: float(round(p, 4))
-            for c, p in zip(classes, probs)
-        }
+        "all_probs":  {c: float(round(p, 4)) for c, p in zip(classes, probs)}
     }
 
 # ── Recovery prediction ───────────────────────────────────────
-def predict_recovery(predictor, intent: str, tone: str,
-                     dpd: int, amount: float,
-                     region: str, reply: str) -> dict:
+def predict_recovery(predictor, intent, tone, dpd, amount, region, reply) -> dict:
     if predictor is None:
         return {"likelihood": "unknown", "confidence": 0.0}
 
     row = {
-        "intent":  intent,
-        "tone":    tone,
-        "dpd":     dpd,
-        "amount":  amount,
-        "region":  region,
-        "reply":   reply,
-        "reminder": "",
-        "cibil_mentioned": False,
-        "legal_mentioned": False,
+        "intent": intent, "tone": tone, "dpd": dpd,
+        "amount": amount, "region": region, "reply": reply,
+        "reminder": "", "cibil_mentioned": False, "legal_mentioned": False,
     }
     df   = pd.DataFrame([row])
     feat = engineer_features(df)
 
     likelihood = predictor.predict(feat)[0]
     probs      = predictor.predict_proba(feat)[0]
-    confidence = float(round(max(probs), 4))
 
     return {
         "likelihood": likelihood,
-        "confidence": confidence,
-        "proba": {
-            c: float(round(p, 4))
-            for c, p in zip(predictor.classes_, probs)
-        }
+        "confidence": float(round(max(probs), 4)),
+        "proba":      {c: float(round(p, 4)) for c, p in zip(predictor.classes_, probs)}
     }
 
-# ── Agent action ──────────────────────────────────────────────
-def get_agent_action(intent: str, ptp: dict,
-                     dpd: int, amount: float,
-                     recovery: str) -> dict:
-    import random
-
-    def make_link(amt, partial=False):
-        lid = f"rzp_{'p' if partial else 'f'}_{random.randint(10000,99999)}"
-        return {"link_id": lid, "url": f"https://rzp.io/l/{lid}", "amount": amt}
+# ── Agent action with REAL Razorpay API ───────────────────────
+def get_agent_action(intent: str, ptp: dict, dpd: int,
+                     amount: float, customer_name: str = "Customer") -> dict:
 
     if intent == "promise_to_pay":
         ptp_amt    = ptp["ptp_amount"]["amount"] or amount
         is_partial = ptp["ptp_amount"]["is_partial"]
         days_out   = ptp["ptp_date"].get("days_from_now", 1) or 1
 
-        if is_partial:
-            link = make_link(ptp_amt, partial=True)
+        if is_partial and ptp_amt < amount:
+            result = create_partial_payment_link(
+                total_amount   = amount,
+                partial_amount = ptp_amt,
+                customer_name  = customer_name,
+                intent         = "partial_payment",
+                dpd            = dpd
+            )
             return {
-                "action":       "SEND_PARTIAL_PAYMENT_LINK",
-                "payment_link": link,
-                "message":      f"Partial payment link of ₹{ptp_amt:.0f} bhej rahe hain.",
-                "follow_up_in": days_out + 1,
-                "risk":         "medium",
+                "action":        "SEND_PARTIAL_PAYMENT_LINK",
+                "payment_link":  result,
+                "message":       f"Partial payment link of Rs{ptp_amt:.0f} sent via Razorpay.",
+                "follow_up_in":  days_out + 1,
+                "risk":          "medium",
             }
         else:
-            link = make_link(ptp_amt)
+            result = create_payment_link(
+                amount        = ptp_amt,
+                customer_name = customer_name,
+                description   = "EMI Recovery - VAADA Collections",
+                intent        = "promise_to_pay",
+                dpd           = dpd
+            )
             return {
                 "action":       "SEND_FULL_PAYMENT_LINK",
-                "payment_link": link,
-                "message":      f"Payment link of ₹{ptp_amt:.0f} bhej rahe hain.",
+                "payment_link": result,
+                "message":      f"Full payment link of Rs{ptp_amt:.0f} sent via Razorpay.",
                 "follow_up_in": days_out + 1,
                 "risk":         "low",
             }
 
     elif intent == "partial_payment":
         ptp_amt = ptp["ptp_amount"]["amount"] or amount * 0.5
-        link    = make_link(ptp_amt, partial=True)
+        result  = create_partial_payment_link(
+            total_amount   = amount,
+            partial_amount = ptp_amt,
+            customer_name  = customer_name,
+            intent         = "partial_payment",
+            dpd            = dpd
+        )
         return {
             "action":       "SEND_PARTIAL_PAYMENT_LINK",
-            "payment_link": link,
-            "message":      f"₹{ptp_amt:.0f} ka partial payment accept kar rahe hain.",
+            "payment_link": result,
+            "message":      f"Rs{ptp_amt:.0f} partial payment link sent via Razorpay.",
             "follow_up_in": 7,
             "risk":         "medium",
         }
@@ -146,23 +138,23 @@ def get_agent_action(intent: str, ptp: dict,
         if dpd > 60:
             return {
                 "action":       "SEND_SETTLEMENT_OFFER",
-                "message":      "Settlement offer bhej rahe hain.",
+                "message":      "Settlement offer sent.",
                 "follow_up_in": 1,
                 "risk":         "high",
             }
         return {
             "action":       "SCHEDULE_FOLLOWUP",
-            "message":      f"{days_out} din ka time de rahe hain.",
+            "message":      f"Follow-up scheduled in {days_out} days.",
             "follow_up_in": days_out,
             "risk":         "medium",
         }
 
     elif intent == "dispute":
-        ticket_id = f"VAADA-{random.randint(1000,9999)}"
+        import random
         return {
             "action":       "FLAG_FOR_HUMAN_REVIEW",
-            "ticket_id":    ticket_id,
-            "message":      "Complaint note kar li. Agent 24 ghante mein contact karega.",
+            "ticket_id":    f"VAADA-{random.randint(1000,9999)}",
+            "message":      "Flagged for human review.",
             "follow_up_in": 1,
             "risk":         "medium",
         }
@@ -171,13 +163,13 @@ def get_agent_action(intent: str, ptp: dict,
         if dpd > 60:
             return {
                 "action":       "TRIGGER_LEGAL_NOTICE",
-                "message":      "Legal notice process initiate kar rahe hain.",
+                "message":      "Legal notice triggered.",
                 "follow_up_in": 0,
                 "risk":         "critical",
             }
         return {
             "action":       "ESCALATE_TO_SENIOR_TEAM",
-            "message":      "Senior collections team ko escalate kar diya.",
+            "message":      "Escalated to senior collections team.",
             "follow_up_in": 1,
             "risk":         "high",
         }
@@ -189,7 +181,7 @@ def get_agent_action(intent: str, ptp: dict,
         "risk":         "medium",
     }
 
-# ── Main pipeline ─────────────────────────────────────────────
+# ── Full pipeline ─────────────────────────────────────────────
 class VAADAPipeline:
     def __init__(self):
         print("Initializing VAADA Pipeline...")
@@ -198,33 +190,25 @@ class VAADAPipeline:
 
     def process(self, reminder: str, reply: str,
                 dpd: int = 15, amount: float = 5000,
-                region: str = "delhi",
-                tone: str = "neutral") -> dict:
+                region: str = "delhi", tone: str = "neutral",
+                customer_name: str = "Customer") -> dict:
 
-        # Step 1: Intent classification
         intent_result = classify_intent(
-            self.models["intent_classifier"],
-            reminder, reply
+            self.models["intent_classifier"], reminder, reply
         )
         intent = intent_result["intent"]
 
-        # Step 2: PTP extraction
         ptp = extract_ptp(reminder, reply, amount)
 
-        # Step 3: Recovery prediction
         recovery = predict_recovery(
             self.models["recovery_predictor"],
             intent, tone, dpd, amount, region, reply
         )
 
-        # Step 4: Agent action
-        action = get_agent_action(
-            intent, ptp, dpd, amount,
-            recovery["likelihood"]
-        )
+        action = get_agent_action(intent, ptp, dpd, amount, customer_name)
 
         return {
-            "timestamp":   datetime.now().isoformat(),
+            "timestamp":  datetime.now().isoformat(),
             "input": {
                 "reminder": reminder,
                 "reply":    reply,
@@ -232,103 +216,26 @@ class VAADAPipeline:
                 "amount":   amount,
                 "region":   region,
             },
-            "intent":    intent_result,
-            "ptp":       ptp,
-            "recovery":  recovery,
-            "action":    action,
+            "intent":   intent_result,
+            "ptp":      ptp,
+            "recovery": recovery,
+            "action":   action,
         }
 
     def process_batch(self, df: pd.DataFrame) -> list:
         results = []
         for _, row in df.iterrows():
             result = self.process(
-                reminder = str(row.get("reminder", "")),
-                reply    = str(row.get("reply", "")),
-                dpd      = int(row.get("dpd", 15)),
-                amount   = float(row.get("amount", 5000)),
-                region   = str(row.get("region", "delhi")),
-                tone     = str(row.get("tone", "neutral")),
+                reminder      = str(row.get("reminder", "")),
+                reply         = str(row.get("reply", "")),
+                dpd           = int(row.get("dpd", 15)),
+                amount        = float(row.get("amount", 5000)),
+                region        = str(row.get("region", "delhi")),
+                tone          = str(row.get("tone", "neutral")),
+                customer_name = str(row.get("name", "Customer")),
             )
             results.append(result)
         return results
-
-# ── Evaluation ────────────────────────────────────────────────
-def evaluate():
-    pipeline = VAADAPipeline()
-    test_df  = pd.read_csv("data/processed/test.csv")
-
-    print(f"Running VAADA on {len(test_df)} test samples...\n")
-    results = pipeline.process_batch(test_df)
-
-    # Metrics
-    correct       = 0
-    total         = len(results)
-    ptp_detected  = 0
-    links_sent    = 0
-    risk_dist     = {"low": 0, "medium": 0, "high": 0, "critical": 0}
-    action_dist   = {}
-
-    for i, (result, (_, row)) in enumerate(
-        zip(results, test_df.iterrows())
-    ):
-        # Intent accuracy
-        if result["intent"]["intent"] == row["intent"]:
-            correct += 1
-
-        # PTP detection
-        if result["ptp"]["has_ptp"]:
-            ptp_detected += 1
-
-        # Payment links
-        if "payment_link" in result["action"]:
-            links_sent += 1
-
-        # Risk distribution
-        risk = result["action"].get("risk", "medium")
-        if risk in risk_dist:
-            risk_dist[risk] += 1
-
-        # Action distribution
-        action = result["action"]["action"]
-        action_dist[action] = action_dist.get(action, 0) + 1
-
-    intent_acc = correct / total
-    ptp_rate   = ptp_detected / total
-    link_rate  = links_sent / total
-
-    print("=" * 50)
-    print("VAADA END-TO-END EVALUATION RESULTS")
-    print("=" * 50)
-    print(f"Total samples processed : {total}")
-    print(f"Intent accuracy         : {intent_acc:.4f}")
-    print(f"PTP detection rate      : {ptp_rate:.4f}")
-    print(f"Payment links generated : {links_sent} ({link_rate:.1%})")
-    print(f"\nAction distribution:")
-    for action, count in sorted(
-        action_dist.items(), key=lambda x: x[1], reverse=True
-    ):
-        print(f"  {action:35} : {count:4} ({count/total:.1%})")
-    print(f"\nRisk distribution:")
-    for risk, count in risk_dist.items():
-        print(f"  {risk:10} : {count:4} ({count/total:.1%})")
-
-    # Save
-    os.makedirs("outputs", exist_ok=True)
-    summary = {
-        "total":          total,
-        "intent_accuracy": round(intent_acc, 4),
-        "ptp_rate":        round(ptp_rate, 4),
-        "link_rate":       round(link_rate, 4),
-        "links_sent":      links_sent,
-        "action_dist":     action_dist,
-        "risk_dist":       risk_dist,
-        "sample_outputs":  results[:5],
-    }
-    with open("outputs/pipeline_results.json", "w") as f:
-        json.dump(summary, f, indent=2, ensure_ascii=False)
-
-    print("\nSaved to outputs/pipeline_results.json")
-    return summary
 
 # ── Demo ──────────────────────────────────────────────────────
 def demo():
@@ -336,53 +243,44 @@ def demo():
 
     cases = [
         {
-            "reminder": "Rahul ji ₹5000 EMI 8 din overdue. "
-                       "Please aaj payment karein: rzp.io/pay",
-            "reply":    "bhai kal pakka kar dunga 🙏",
+            "reminder":      "Rahul ji Rs5000 EMI 8 din overdue. Aaj payment karein.",
+            "reply":         "bhai kal pakka kar dunga 🙏",
             "dpd": 8, "amount": 5000, "region": "delhi",
+            "customer_name": "Rahul Singh",
         },
         {
-            "reminder": "Arre ₹12000 business loan 20 din overdue. "
-                       "Settlement offer hai aapke liye.",
-            "reply":    "aadha abhi de sakta hun 6000 baaki 15 tarikh ko",
+            "reminder":      "Rs12000 business loan 20 din overdue.",
+            "reply":         "aadha abhi de sakta hun 6000 baaki 15 tarikh ko",
             "dpd": 20, "amount": 12000, "region": "mumbai",
+            "customer_name": "Amit Kumar",
         },
         {
-            "reminder": "₹8000 EMI miss ho gayi. Kripya payment karein.",
-            "reply":    "maine toh 3 din pehle UPI kar diya tha",
-            "dpd": 7, "amount": 8000, "region": "hyderabad",
-        },
-        {
-            "reminder": "₹18000 bahut time overdue. Legal action lena padega.",
-            "reply":    "nahi karunga court mein milte hain",
-            "dpd": 65, "amount": 18000, "region": "bangalore",
+            "reminder":      "Rs18000 bahut time overdue. Legal action lena padega.",
+            "reply":         "nahi karunga court mein milte hain",
+            "dpd": 65, "amount": 18000, "region": "delhi",
+            "customer_name": "Suresh Yadav",
         },
     ]
 
     print("=" * 60)
-    print("VAADA PIPELINE DEMO")
+    print("VAADA PIPELINE DEMO — REAL RAZORPAY INTEGRATION")
     print("=" * 60)
 
     for i, case in enumerate(cases, 1):
         print(f"\n--- Case {i} ---")
-        print(f"Reminder : {case['reminder'][:60]}...")
-        print(f"Reply    : {case['reply']}")
         result = pipeline.process(**case)
-        print(f"Intent   : {result['intent']['intent']} "
-              f"({result['intent']['confidence']:.0%})")
-        print(f"PTP      : {result['ptp']['has_ptp']} | "
-              f"Date: {result['ptp']['ptp_date']['raw']} | "
-              f"Amount: {result['ptp']['ptp_amount']['amount']}")
-        print(f"Recovery : {result['recovery']['likelihood']} "
-              f"({result['recovery']['confidence']:.0%})")
+        print(f"Reply    : {case['reply']}")
+        print(f"Intent   : {result['intent']['intent']} ({result['intent']['confidence']:.0%})")
+        print(f"Recovery : {result['recovery']['likelihood']}")
         print(f"Action   : {result['action']['action']}")
-        print(f"Message  : {result['action']['message']}")
+
         if "payment_link" in result["action"]:
-            print(f"Link     : {result['action']['payment_link']['url']}")
+            pl = result["action"]["payment_link"]
+            if pl.get("success"):
+                print(f"REAL URL : {pl['short_url']}")
+                print(f"Link ID  : {pl['link_id']}")
+            else:
+                print(f"Link err : {pl.get('error')}")
 
 if __name__ == "__main__":
-    print("VAADA — Vernacular Agentic AI for Debt & Arrears\n")
     demo()
-    print("\n" + "=" * 60)
-    print("Running full evaluation...")
-    evaluate()
