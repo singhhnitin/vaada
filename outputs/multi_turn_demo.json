@@ -1,0 +1,146 @@
+{
+  "summary": {
+    "customer": "Rahul Singh",
+    "loan_amount": 8000,
+    "total_turns": 5,
+    "status": "refused",
+    "escalation_level": 2,
+    "promises_made": 0,
+    "promises_broken": 0,
+    "intent_sequence": [
+      "needs_more_time",
+      "needs_more_time",
+      "refusal",
+      "refusal",
+      "refusal"
+    ],
+    "next_action": {
+      "action": "TRIGGER_LEGAL",
+      "follow_up_in": 0,
+      "message": "Refusal. Legal action triggered.",
+      "risk": "critical"
+    }
+  },
+  "turns": [
+    {
+      "day": 1,
+      "reminder": "Rahul ji Rs8000 EMI 8 din overdue. Aaj payment karein.",
+      "reply": "bhai kal pakka kar dunga, aaj thoda busy tha 🙏",
+      "dpd": 8,
+      "intent": "needs_more_time",
+      "confidence": 0.5751936038248111,
+      "ptp": {
+        "has_ptp": true,
+        "ptp_date": {
+          "raw": "tomorrow",
+          "days_from_now": 1,
+          "confidence": 0.9
+        },
+        "ptp_amount": {
+          "amount": 4000.0,
+          "is_partial": true,
+          "confidence": 0.5
+        },
+        "commitment_strength": "strong",
+        "follow_up_in_days": 2
+      },
+      "timestamp": "2026-08-25T11:59:26.746152"
+    },
+    {
+      "day": 3,
+      "reminder": "Rahul ji, kal payment nahi aaya. Please aaj karein.",
+      "reply": "yaar 2-3 din aur chahiye, paisa aa raha hai",
+      "dpd": 10,
+      "intent": "needs_more_time",
+      "confidence": 0.5427616459212821,
+      "ptp": {
+        "has_ptp": true,
+        "ptp_date": {
+          "raw": "n_days",
+          "days_from_now": 3,
+          "confidence": 0.9
+        },
+        "ptp_amount": {
+          "amount": null,
+          "is_partial": false,
+          "confidence": 0.0
+        },
+        "commitment_strength": "moderate",
+        "follow_up_in_days": 4
+      },
+      "timestamp": "2026-08-25T11:59:26.797987"
+    },
+    {
+      "day": 6,
+      "reminder": "3rd reminder - Rs8000 still pending. CIBIL affect hoga.",
+      "reply": "bhai client ne payment nahi ki mujhe, Friday pakka",
+      "dpd": 13,
+      "intent": "refusal",
+      "confidence": 0.505980576173918,
+      "ptp": {
+        "has_ptp": true,
+        "ptp_date": {
+          "raw": "friday",
+          "days_from_now": null,
+          "confidence": 0.9
+        },
+        "ptp_amount": {
+          "amount": null,
+          "is_partial": false,
+          "confidence": 0.0
+        },
+        "commitment_strength": "strong",
+        "follow_up_in_days": 3
+      },
+      "timestamp": "2026-08-25T11:59:26.799357"
+    },
+    {
+      "day": 9,
+      "reminder": "Friday bhi nahi kiya. This is the last reminder.",
+      "reply": "aadha abhi de sakta hun 4000 baaki next week",
+      "dpd": 16,
+      "intent": "refusal",
+      "confidence": 0.792387485279287,
+      "ptp": {
+        "has_ptp": true,
+        "ptp_date": {
+          "raw": "next week",
+          "days_from_now": 7,
+          "confidence": 0.9
+        },
+        "ptp_amount": {
+          "amount": 4000.0,
+          "is_partial": true,
+          "confidence": 0.5
+        },
+        "commitment_strength": "moderate",
+        "follow_up_in_days": 8
+      },
+      "timestamp": "2026-08-25T11:59:26.800816"
+    },
+    {
+      "day": 12,
+      "reminder": "Rs4000 partial payment accepted. When for remaining?",
+      "reply": "bhai honestly abhi possible nahi court mein milte hain",
+      "dpd": 19,
+      "intent": "refusal",
+      "confidence": 0.9370134976552134,
+      "ptp": {
+        "has_ptp": false,
+        "ptp_date": {
+          "raw": null,
+          "days_from_now": null,
+          "confidence": 0.0
+        },
+        "ptp_amount": {
+          "amount": null,
+          "is_partial": false,
+          "confidence": 0.0
+        },
+        "commitment_strength": "none",
+        "follow_up_in_days": null
+      },
+      "timestamp": "2026-08-25T11:59:26.802393"
+    }
+  ]
+}
