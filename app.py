@@ -6,7 +6,7 @@ import random
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.abspath("."))
 
 from src.nlu.ptp_extractor import extract_ptp
 from src.nlu.recovery_predictor import engineer_features
