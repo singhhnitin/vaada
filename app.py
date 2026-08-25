@@ -37,12 +37,12 @@ div[data-testid="stSidebar"]{background:#0d0d0d!important;border-right:1px solid
 def load_models():
     m = {}
     try:
-        with open("models/baseline_pipeline.pkl","rb") as f:
+        with open(os.path.join(os.path.dirname(os.path.abspath("app.py")), "models", "baseline_pipeline.pkl"),"rb") as f:
             m["intent"] = pickle.load(f)
     except:
         m["intent"] = None
     try:
-        with open("models/recovery_predictor.pkl","rb") as f:
+        with open(os.path.join(os.path.dirname(os.path.abspath("app.py")), "models", "recovery_predictor.pkl"),"rb") as f:
             m["recovery"] = pickle.load(f)
     except:
         m["recovery"] = None
