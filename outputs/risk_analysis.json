@@ -1,0 +1,177 @@
+{
+  "patterns": {
+    "intent_distribution": {
+      "promise_to_pay": 0.225,
+      "refusal": 0.198,
+      "needs_more_time": 0.194,
+      "partial_payment": 0.194,
+      "dispute": 0.189
+    },
+    "high_risk_rate": 0.387,
+    "regional_patterns": {
+      "mumbai": {
+        "total": 2298,
+        "refusal_rate": 0.377,
+        "risk_level": "medium"
+      },
+      "delhi": {
+        "total": 2281,
+        "refusal_rate": 0.374,
+        "risk_level": "medium"
+      },
+      "hyderabad": {
+        "total": 2350,
+        "refusal_rate": 0.4,
+        "risk_level": "high"
+      },
+      "bangalore": {
+        "total": 2324,
+        "refusal_rate": 0.399,
+        "risk_level": "medium"
+      },
+      "pune": {
+        "total": 99,
+        "refusal_rate": 0.404,
+        "risk_level": "high"
+      },
+      "chennai": {
+        "total": 199,
+        "refusal_rate": 0.357,
+        "risk_level": "medium"
+      },
+      "Hyderabad": {
+        "total": 89,
+        "refusal_rate": 0.539,
+        "risk_level": "high"
+      },
+      "kolkata": {
+        "total": 23,
+        "refusal_rate": 0.304,
+        "risk_level": "medium"
+      }
+    },
+    "dpd_stage_analysis": {
+      "soft_1_15": {
+        "count": 2141,
+        "promise_rate": 0.234,
+        "refusal_rate": 0.378,
+        "recovery_likelihood": "low"
+      },
+      "mid_15_30": {
+        "count": 2633,
+        "promise_rate": 0.252,
+        "refusal_rate": 0.378,
+        "recovery_likelihood": "low"
+      },
+      "hard_30_60": {
+        "count": 2525,
+        "promise_rate": 0.211,
+        "refusal_rate": 0.382,
+        "recovery_likelihood": "low"
+      },
+      "severe_60_90": {
+        "count": 2287,
+        "promise_rate": 0.2,
+        "refusal_rate": 0.414,
+        "recovery_likelihood": "low"
+      }
+    },
+    "tone_risk_patterns": {
+      "desperate": {
+        "count": 1161,
+        "refusal_rate": 0.258,
+        "risk": "low"
+      },
+      "cooperative": {
+        "count": 1868,
+        "refusal_rate": 0.285,
+        "risk": "low"
+      },
+      "evasive": {
+        "count": 1371,
+        "refusal_rate": 0.486,
+        "risk": "low"
+      },
+      "worried": {
+        "count": 1365,
+        "refusal_rate": 0.419,
+        "risk": "low"
+      },
+      "polite": {
+        "count": 1958,
+        "refusal_rate": 0.268,
+        "risk": "low"
+      },
+      "angry": {
+        "count": 991,
+        "refusal_rate": 0.747,
+        "risk": "high"
+      },
+      "resigned": {
+        "count": 759,
+        "refusal_rate": 0.361,
+        "risk": "low"
+      },
+      "stressed": {
+        "count": 93,
+        "refusal_rate": 0.925,
+        "risk": "high"
+      },
+      "polite-firm": {
+        "count": 60,
+        "refusal_rate": 0.517,
+        "risk": "high"
+      },
+      "apologetic": {
+        "count": 36,
+        "refusal_rate": 0.389,
+        "risk": "low"
+      },
+      "firm": {
+        "count": 26,
+        "refusal_rate": 0.462,
+        "risk": "low"
+      }
+    },
+    "risk_score_stats": {
+      "mean": 0.683,
+      "high_risk_pct": 0.615,
+      "low_risk_pct": 0.102
+    },
+    "key_insights": [
+      "Hyderabad has highest default risk (53.9% refusal rate)",
+      "Kolkata has lowest default risk (30.4% refusal rate)",
+      "Aggressive tone customers have highest default probability — flag immediately for human review",
+      "Customers in soft DPD (1-15 days) have highest recovery probability — prioritize early intervention"
+    ]
+  },
+  "revenue_leaks": {
+    "total_portfolio_value": 116282068,
+    "at_risk_segments": {
+      "high_risk": {
+        "count": 3753,
+        "pct": 38.7,
+        "amount_at_risk": 48215715,
+        "recommended_action": "Immediate escalation or legal notice"
+      },
+      "medium_risk": {
+        "count": 1879,
+        "pct": 19.4,
+        "amount_at_risk": 21841003,
+        "recommended_action": "Settlement offer or payment plan"
+      },
+      "low_risk": {
+        "count": 4061,
+        "pct": 41.9,
+        "recoverable": 39291547,
+        "recommended_action": "Send Razorpay payment link immediately"
+      }
+    },
+    "vaada_recovery_projection": {
+      "auto_recoverable_pct": 42.9,
+      "human_review_pct": 17.5,
+      "escalation_pct": 15.5,
+      "legal_pct": 4.4
+    }
+  }
+}
