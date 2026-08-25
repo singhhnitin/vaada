@@ -17,7 +17,7 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
 .stApp{background:#0a0a0a!important}
-.block-container{padding:1.5rem 2rem}
+.block-container{padding:1.5rem 2rem} header{display:none!important} .stAppHeader{display:none!important}
 h1,h2,h3{color:#00ff41!important;font-family:'JetBrains Mono',monospace!important}
 p,label{color:#c8ffc8!important;font-family:'JetBrains Mono',monospace!important;font-size:12px!important}
 div[data-testid="stSidebar"]{background:#0d0d0d!important;border-right:1px solid #1a3a1a!important}
