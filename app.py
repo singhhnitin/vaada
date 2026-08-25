@@ -150,7 +150,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("[GitHub](https://github.com/singhhnitin/vaada)")
 
-tab1,tab2,tab3,tab4,tab5 = st.tabs(["LIVE DEMO","EVAL RESULTS","BUSINESS IMPACT","DATASET","WHATSAPP SIM"])
+tab1,tab2,tab3,tab4,tab5,tab6 = st.tabs(["LIVE DEMO","EVAL RESULTS","BUSINESS IMPACT","DATASET","WHATSAPP SIM","RISK ANALYSIS"])
 
 with tab1:
     st.markdown("## VAADA Live Pipeline")
@@ -403,3 +403,63 @@ with tab5:
             st.session_state.ws_status = "active"
             st.session_state.ws_links  = []
             st.rerun()
+
+with tab6:
+    st.markdown("## Risk Analysis — Diagnose Revenue Leaks")
+    st.markdown("Pattern analysis across 9,693 conversations to identify WHY revenue leaks and WHO defaults.")
+    st.markdown("---")
+
+    try:
+        import json
+        with open("outputs/risk_analysis.json") as f:
+            risk_data = json.load(f)
+
+        patterns = risk_data.get("patterns", {})
+        leaks    = risk_data.get("revenue_leaks", {})
+
+        # Key stats
+        rk1,rk2,rk3 = st.columns(3)
+        with rk1:
+            st.markdown('<div class="mbox"><div class="mlabel">HIGH RISK RATE</div><div class="mvalue" style="color:#ff3131">38.7%</div><div class="msub">refusal + dispute</div></div>', unsafe_allow_html=True)
+        with rk2:
+            st.markdown('<div class="mbox"><div class="mlabel">HIGHEST RISK REGION</div><div class="mvalue" style="color:#ffd700">Hyderabad</div><div class="msub">53.9% refusal rate</div></div>', unsafe_allow_html=True)
+        with rk3:
+            st.markdown('<div class="mbox"><div class="mlabel">BEST INTERVENTION</div><div class="mvalue">DPD 1-15</div><div class="msub">highest recovery potential</div></div>', unsafe_allow_html=True)
+
+        st.markdown("---")
+        ra,rb = st.columns(2)
+
+        with ra:
+            st.markdown("**REGIONAL RISK PATTERNS**")
+            regional = patterns.get("regional_patterns", {})
+            reg_df = pd.DataFrame([
+                {"Region": k, "Refusal Rate": v["refusal_rate"], "Count": v["total"]}
+                for k,v in regional.items() if v["total"] > 50
+            ]).sort_values("Refusal Rate", ascending=False)
+            if not reg_df.empty:
+                st.bar_chart(reg_df.set_index("Region")["Refusal Rate"])
+
+        with rb:
+            st.markdown("**DPD STAGE ANALYSIS**")
+            dpd_data = patterns.get("dpd_stage_analysis", {})
+            dpd_df = pd.DataFrame([
+                {"Stage": k, "Promise Rate": v["promise_rate"], "Refusal Rate": v["refusal_rate"]}
+                for k,v in dpd_data.items()
+            ])
+            if not dpd_df.empty:
+                st.bar_chart(dpd_df.set_index("Stage"))
+
+        st.markdown("---")
+        st.markdown("**KEY INSIGHTS**")
+        for i, insight in enumerate(patterns.get("key_insights", []), 1):
+            st.markdown(f"`{i}.` {insight}")
+
+        st.markdown("---")
+        st.markdown("**REVENUE LEAK DIAGNOSIS**")
+        segments = leaks.get("at_risk_segments", {})
+        for seg, data in segments.items():
+            col = "#ff3131" if seg == "high_risk" else "#ffd700" if seg == "medium_risk" else "#00ff41"
+            st.markdown(f'<div style="background:#0d0d0d;border:1px solid {col};padding:12px;margin-bottom:8px;font-family:JetBrains Mono,monospace"><span style="color:{col};font-weight:700">{seg.upper()}</span> — {data["count"]} conversations ({data["pct"]}%) → {data["recommended_action"]}</div>', unsafe_allow_html=True)
+
+    except Exception as e:
+        st.code(f"Run src/analysis/risk_analyzer.py first. Error: {e}")
