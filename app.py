@@ -108,16 +108,18 @@ def run_pipeline(reminder, reply, dpd, amount, region, tone):
     ptp_amt  = ptp["ptp_amount"]["amount"] or amount
     partial  = ptp["ptp_amount"]["is_partial"]
     days_out = ptp["ptp_date"].get("days_from_now",1) or 1
-    lid      = "rzp_{}_{}".format("p" if partial else "f", random.randint(10000,99999))
+    from src.agent.razorpay_client import create_payment_link, create_partial_payment_link
 
     if intent == "promise_to_pay":
+        rzp = create_payment_link(amount=ptp_amt, customer_name="Customer", intent=intent, dpd=dpd) if not partial else create_partial_payment_link(total_amount=amount, partial_amount=ptp_amt, intent=intent, dpd=dpd)
         res["action"]      = "SEND_PARTIAL_PAYMENT_LINK" if partial else "SEND_FULL_PAYMENT_LINK"
-        res["link"]        = "https://rzp.io/l/" + lid
+        res["link"]        = rzp.get("short_url", "link_error") if rzp.get("success") else "api_error"
         res["link_amount"] = ptp_amt
         res["follow_up"]   = days_out + 1
     elif intent == "partial_payment":
+        rzp = create_partial_payment_link(total_amount=amount, partial_amount=ptp["ptp_amount"]["amount"] or amount*0.5, intent=intent, dpd=dpd)
         res["action"]      = "SEND_PARTIAL_PAYMENT_LINK"
-        res["link"]        = "https://rzp.io/l/" + lid
+        res["link"]        = rzp.get("short_url", "link_error") if rzp.get("success") else "api_error"
         res["link_amount"] = ptp["ptp_amount"]["amount"] or amount * 0.5
         res["follow_up"]   = 7
     elif intent == "needs_more_time":
@@ -181,6 +183,8 @@ with tab1:
     run_btn = st.button("RUN VAADA PIPELINE", use_container_width=True)
 
     if run_btn and reminder and reply:
+        # Import real Razorpay client
+        from src.agent.razorpay_client import create_payment_link, create_partial_payment_link
         st.markdown("---")
         prog = st.progress(0)
         status = st.empty()
