@@ -149,6 +149,11 @@ with st.sidebar:
     st.code("Intent F1  : 0.9890\nPTP Detect : 0.8219\nRecovery   : 1.0000\nLinks Gen  : 42.9%\nDataset    : 9,693", language=None)
     st.markdown("---")
     st.markdown("[GitHub](https://github.com/singhhnitin/vaada)")
+st.markdown("---")
+st.markdown("**COMPLEMENTS**")
+st.markdown("Razorpay Vulcan handles payment routing and fraud.")
+st.markdown("VAADA handles Hinglish communication NLU.")
+st.markdown("Together = complete AI payments stack.")
 
 tab1,tab2,tab3,tab4,tab5,tab6 = st.tabs(["LIVE DEMO","EVAL RESULTS","BUSINESS IMPACT","DATASET","WHATSAPP SIM","RISK ANALYSIS"])
 
