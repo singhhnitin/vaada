@@ -150,7 +150,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("[GitHub](https://github.com/singhhnitin/vaada)")
 
-tab1,tab2,tab3,tab4 = st.tabs(["LIVE DEMO","EVAL RESULTS","BUSINESS IMPACT","DATASET"])
+tab1,tab2,tab3,tab4,tab5 = st.tabs(["LIVE DEMO","EVAL RESULTS","BUSINESS IMPACT","DATASET","WHATSAPP SIM"])
 
 with tab1:
     st.markdown("## VAADA Live Pipeline")
@@ -312,3 +312,94 @@ with tab4:
 
 st.markdown("---")
 st.markdown("`VAADA v1.0.0 | Razorpay AI Buildathon 2026 | Revenue Recovery Track | github.com/singhhnitin/vaada`")
+
+with tab5:
+    st.markdown("## WhatsApp Collections Simulator")
+    st.markdown("Simulate a real multi-day Hinglish collections thread. Watch VAADA process each turn.")
+    st.markdown("---")
+
+    if "ws_conv" not in st.session_state:
+        st.session_state.ws_conv = []
+        st.session_state.ws_day  = 1
+        st.session_state.ws_status = "active"
+        st.session_state.ws_links  = []
+
+    wa1, wa2 = st.columns([2,1])
+
+    with wa1:
+        st.markdown("**CONVERSATION THREAD**")
+        chat_html = '<div style="background:#050505;border:1px solid #1a3a1a;padding:16px;height:400px;overflow-y:auto;font-family:JetBrains Mono,monospace;font-size:12px">'
+        if not st.session_state.ws_conv:
+            chat_html += '<div style="color:#557755;text-align:center;margin-top:160px">Start conversation below</div>'
+        for msg in st.session_state.ws_conv:
+            if msg["sender"] == "agent":
+                chat_html += f'<div style="margin-bottom:12px"><div style="color:#557755;font-size:10px">AGENT · Day {msg["day"]}</div><div style="background:#003311;border:1px solid #1a3a1a;padding:8px;color:#00ff41;margin-top:2px">{msg["text"]}</div></div>'
+            else:
+                chat_html += f'<div style="margin-bottom:12px;text-align:right"><div style="color:#557755;font-size:10px">CUSTOMER · Day {msg["day"]}</div><div style="background:#0d0d0d;border:1px solid #1a3a1a;padding:8px;color:#c8ffc8;margin-top:2px">{msg["text"]}</div>'
+                if msg.get("intent"):
+                    color = "#00ff41" if msg["intent"] in ["promise_to_pay","partial_payment"] else "#ffd700" if msg["intent"] == "needs_more_time" else "#ff3131"
+                    chat_html += f'<div style="color:{color};font-size:10px;margin-top:2px">▶ {msg["intent"].upper()}</div>'
+                if msg.get("link"):
+                    chat_html += f'<div style="color:#00cfff;font-size:10px">🔗 {msg["link"]}</div>'
+                chat_html += '</div>'
+        chat_html += '</div>'
+        st.markdown(chat_html, unsafe_allow_html=True)
+
+    with wa2:
+        st.markdown("**THREAD STATUS**")
+        st.markdown(f'`Day      : {st.session_state.ws_day}`')
+        st.markdown(f'`Messages : {len(st.session_state.ws_conv)}`')
+        st.markdown(f'`Status   : {st.session_state.ws_status}`')
+        st.markdown(f'`Links    : {len(st.session_state.ws_links)}`')
+
+    st.markdown("---")
+    ws1, ws2 = st.columns(2)
+    with ws1:
+        agent_msg = st.text_input("Agent sends:", placeholder="Rahul ji Rs5000 EMI overdue hai...")
+    with ws2:
+        customer_msg = st.text_input("Customer replies:", placeholder="bhai kal pakka kar dunga 🙏")
+
+    wc1, wc2, wc3 = st.columns(3)
+    with wc1:
+        ws_amount = st.number_input("Amount", 500, 50000, 5000, step=500, key="ws_amt")
+    with wc2:
+        ws_dpd = st.number_input("DPD", 1, 90, st.session_state.ws_day, key="ws_dpd")
+    with wc3:
+        ws_region = st.selectbox("Region", ["delhi","mumbai","hyderabad","bangalore"], key="ws_reg")
+
+    btn1, btn2 = st.columns(2)
+    with btn1:
+        if st.button("SEND TURN", use_container_width=True):
+            if agent_msg and customer_msg:
+                from src.nlu.ptp_extractor import extract_ptp
+                intent_result = run_pipeline(agent_msg, customer_msg, ws_dpd, ws_amount, ws_region, "neutral")
+                ptp = intent_result["ptp"]
+
+                st.session_state.ws_conv.append({"sender":"agent","text":agent_msg,"day":st.session_state.ws_day})
+
+                customer_entry = {
+                    "sender":   "customer",
+                    "text":     customer_msg,
+                    "day":      st.session_state.ws_day,
+                    "intent":   intent_result["intent"],
+                    "link":     None
+                }
+
+                if intent_result["intent"] in ["promise_to_pay","partial_payment"]:
+                    link = intent_result.get("link","")
+                    customer_entry["link"] = link
+                    if link:
+                        st.session_state.ws_links.append(link)
+
+                st.session_state.ws_conv.append(customer_entry)
+                st.session_state.ws_day += 2
+                st.session_state.ws_status = intent_result["intent"]
+                st.rerun()
+
+    with btn2:
+        if st.button("RESET", use_container_width=True):
+            st.session_state.ws_conv   = []
+            st.session_state.ws_day    = 1
+            st.session_state.ws_status = "active"
+            st.session_state.ws_links  = []
+            st.rerun()
