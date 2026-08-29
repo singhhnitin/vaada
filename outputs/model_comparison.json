@@ -2,13 +2,14 @@
   "baseline": {
     "f1": 0.989,
     "accuracy": 0.989,
-    "model": "TF-IDF + Logistic Regression"
+    "model": "TF-IDF + Logistic Regression",
+    "samples": 1454
   },
   "finetuned": {
-    "f1": 0.6318,
-    "accuracy": 0.69,
+    "f1": 0.7292,
+    "accuracy": 0.7345,
     "model": "Gemma-3-1B QLoRA",
-    "samples": 100
+    "samples": 1454
   },
   "real_world": {
     "intent_accuracy": 0.85,
@@ -18,5 +19,12 @@
   "training": {
     "epoch3_token_accuracy": 0.8494,
     "val_loss": 0.552
+  },
+  "per_class_finetuned": {
+    "promise_to_pay": 0.78,
+    "needs_more_time": 0.7,
+    "partial_payment": 0.57,
+    "dispute": 0.92,
+    "refusal": 0.68
   }
 }
