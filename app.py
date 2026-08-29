@@ -6,7 +6,7 @@ import random
 import sys
 import os
 
-sys.path.insert(0, os.path.abspath("."))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from src.nlu.ptp_extractor import extract_ptp
 from src.nlu.recovery_predictor import engineer_features
@@ -17,7 +17,7 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
 .stApp{background:#0a0a0a!important}
-.block-container{padding:1.5rem 2rem} header{display:none!important} .stAppHeader{display:none!important}
+.block-container{padding:1.5rem 2rem}
 h1,h2,h3{color:#00ff41!important;font-family:'JetBrains Mono',monospace!important}
 p,label{color:#c8ffc8!important;font-family:'JetBrains Mono',monospace!important;font-size:12px!important}
 div[data-testid="stSidebar"]{background:#0d0d0d!important;border-right:1px solid #1a3a1a!important}
@@ -37,12 +37,12 @@ div[data-testid="stSidebar"]{background:#0d0d0d!important;border-right:1px solid
 def load_models():
     m = {}
     try:
-        with open(os.path.join(os.path.dirname(os.path.abspath("app.py")), "models", "baseline_pipeline.pkl"),"rb") as f:
+        with open("models/baseline_pipeline.pkl","rb") as f:
             m["intent"] = pickle.load(f)
     except:
         m["intent"] = None
     try:
-        with open(os.path.join(os.path.dirname(os.path.abspath("app.py")), "models", "recovery_predictor.pkl"),"rb") as f:
+        with open("models/recovery_predictor.pkl","rb") as f:
             m["recovery"] = pickle.load(f)
     except:
         m["recovery"] = None
@@ -108,18 +108,16 @@ def run_pipeline(reminder, reply, dpd, amount, region, tone):
     ptp_amt  = ptp["ptp_amount"]["amount"] or amount
     partial  = ptp["ptp_amount"]["is_partial"]
     days_out = ptp["ptp_date"].get("days_from_now",1) or 1
-    from src.agent.razorpay_client import create_payment_link, create_partial_payment_link
+    lid      = "rzp_{}_{}".format("p" if partial else "f", random.randint(10000,99999))
 
     if intent == "promise_to_pay":
-        rzp = create_payment_link(amount=ptp_amt, customer_name="Customer", intent=intent, dpd=dpd) if not partial else create_partial_payment_link(total_amount=amount, partial_amount=ptp_amt, intent=intent, dpd=dpd)
         res["action"]      = "SEND_PARTIAL_PAYMENT_LINK" if partial else "SEND_FULL_PAYMENT_LINK"
-        res["link"]        = rzp.get("short_url", "link_error") if rzp.get("success") else "api_error"
+        res["link"]        = "https://rzp.io/l/" + lid
         res["link_amount"] = ptp_amt
         res["follow_up"]   = days_out + 1
     elif intent == "partial_payment":
-        rzp = create_partial_payment_link(total_amount=amount, partial_amount=ptp["ptp_amount"]["amount"] or amount*0.5, intent=intent, dpd=dpd)
         res["action"]      = "SEND_PARTIAL_PAYMENT_LINK"
-        res["link"]        = rzp.get("short_url", "link_error") if rzp.get("success") else "api_error"
+        res["link"]        = "https://rzp.io/l/" + lid
         res["link_amount"] = ptp["ptp_amount"]["amount"] or amount * 0.5
         res["follow_up"]   = 7
     elif intent == "needs_more_time":
@@ -143,25 +141,14 @@ with st.sidebar:
     st.markdown("Vernacular Agentic AI for Debt and Arrears")
     st.markdown("---")
     st.markdown("MODEL STATUS")
-    st.markdown("✅ Production Model loaded" if MODELS["intent"] else "❌ Production Model missing")
-st.markdown("✅ Recovery Predictor loaded" if MODELS["recovery"] else "❌ Recovery Predictor missing")
-st.markdown("---")
-st.markdown("**MODEL ARCHITECTURE**")
-st.markdown(" : TF-IDF + LR (F1=0.9890)")
-st.markdown("   : Gemma-3-1B QLoRA (84.9%)")
-st.markdown("Baseline is production. Gemma shows domain adaptation direction.")
-    
+    st.markdown("OK Intent Classifier" if MODELS["intent"] else "MISSING Intent Classifier")
+    st.markdown("OK Recovery Predictor" if MODELS["recovery"] else "MISSING Recovery Predictor")
     st.markdown("---")
     st.code("Intent F1  : 0.9890\nPTP Detect : 0.8219\nRecovery   : 1.0000\nLinks Gen  : 42.9%\nDataset    : 9,693", language=None)
     st.markdown("---")
     st.markdown("[GitHub](https://github.com/singhhnitin/vaada)")
-st.markdown("---")
-st.markdown("**COMPLEMENTS**")
-st.markdown("Razorpay Vulcan handles payment routing and fraud.")
-st.markdown("VAADA handles Hinglish communication NLU.")
-st.markdown("Together = complete AI payments stack.")
 
-tab1,tab2,tab3,tab4,tab5,tab6,tab7 = st.tabs(["LIVE DEMO","EVAL RESULTS","BUSINESS IMPACT","DATASET","WHATSAPP SIM","RISK ANALYSIS","VAADA VS MANUAL"])
+tab1,tab2,tab3,tab4 = st.tabs(["LIVE DEMO","EVAL RESULTS","BUSINESS IMPACT","DATASET"])
 
 with tab1:
     st.markdown("## VAADA Live Pipeline")
@@ -194,8 +181,6 @@ with tab1:
     run_btn = st.button("RUN VAADA PIPELINE", use_container_width=True)
 
     if run_btn and reminder and reply:
-        # Import real Razorpay client
-        from src.agent.razorpay_client import create_payment_link, create_partial_payment_link
         st.markdown("---")
         prog = st.progress(0)
         status = st.empty()
@@ -323,230 +308,3 @@ with tab4:
 
 st.markdown("---")
 st.markdown("`VAADA v1.0.0 | Razorpay AI Buildathon 2026 | Revenue Recovery Track | github.com/singhhnitin/vaada`")
-
-with tab5:
-    st.markdown("## WhatsApp Collections Simulator")
-    st.markdown("Simulate a real multi-day Hinglish collections thread. Watch VAADA process each turn.")
-    st.markdown("---")
-
-    if "ws_conv" not in st.session_state:
-        st.session_state.ws_conv = []
-        st.session_state.ws_day  = 1
-        st.session_state.ws_status = "active"
-        st.session_state.ws_links  = []
-
-    wa1, wa2 = st.columns([2,1])
-
-    with wa1:
-        st.markdown("**CONVERSATION THREAD**")
-        chat_html = '<div style="background:#050505;border:1px solid #1a3a1a;padding:16px;height:400px;overflow-y:auto;font-family:JetBrains Mono,monospace;font-size:12px">'
-        if not st.session_state.ws_conv:
-            chat_html += '<div style="color:#557755;text-align:center;margin-top:160px">Start conversation below</div>'
-        for msg in st.session_state.ws_conv:
-            if msg["sender"] == "agent":
-                chat_html += f'<div style="margin-bottom:12px"><div style="color:#557755;font-size:10px">AGENT · Day {msg["day"]}</div><div style="background:#003311;border:1px solid #1a3a1a;padding:8px;color:#00ff41;margin-top:2px">{msg["text"]}</div></div>'
-            else:
-                chat_html += f'<div style="margin-bottom:12px;text-align:right"><div style="color:#557755;font-size:10px">CUSTOMER · Day {msg["day"]}</div><div style="background:#0d0d0d;border:1px solid #1a3a1a;padding:8px;color:#c8ffc8;margin-top:2px">{msg["text"]}</div>'
-                if msg.get("intent"):
-                    color = "#00ff41" if msg["intent"] in ["promise_to_pay","partial_payment"] else "#ffd700" if msg["intent"] == "needs_more_time" else "#ff3131"
-                    chat_html += f'<div style="color:{color};font-size:10px;margin-top:2px">▶ {msg["intent"].upper()}</div>'
-                if msg.get("link"):
-                    chat_html += f'<div style="color:#00cfff;font-size:10px">🔗 {msg["link"]}</div>'
-                chat_html += '</div>'
-        chat_html += '</div>'
-        st.markdown(chat_html, unsafe_allow_html=True)
-
-    with wa2:
-        st.markdown("**THREAD STATUS**")
-        st.markdown(f'`Day      : {st.session_state.ws_day}`')
-        st.markdown(f'`Messages : {len(st.session_state.ws_conv)}`')
-        st.markdown(f'`Status   : {st.session_state.ws_status}`')
-        st.markdown(f'`Links    : {len(st.session_state.ws_links)}`')
-
-    st.markdown("---")
-    ws1, ws2 = st.columns(2)
-    with ws1:
-        agent_msg = st.text_input("Agent sends:", placeholder="Rahul ji Rs5000 EMI overdue hai...")
-    with ws2:
-        customer_msg = st.text_input("Customer replies:", placeholder="bhai kal pakka kar dunga 🙏")
-
-    wc1, wc2, wc3 = st.columns(3)
-    with wc1:
-        ws_amount = st.number_input("Amount", 500, 50000, 5000, step=500, key="ws_amt")
-    with wc2:
-        ws_dpd = st.number_input("DPD", 1, 90, st.session_state.ws_day, key="ws_dpd")
-    with wc3:
-        ws_region = st.selectbox("Region", ["delhi","mumbai","hyderabad","bangalore"], key="ws_reg")
-
-    btn1, btn2 = st.columns(2)
-    with btn1:
-        if st.button("SEND TURN", use_container_width=True):
-            if agent_msg and customer_msg:
-                from src.nlu.ptp_extractor import extract_ptp
-                intent_result = run_pipeline(agent_msg, customer_msg, ws_dpd, ws_amount, ws_region, "neutral")
-                ptp = intent_result["ptp"]
-
-                st.session_state.ws_conv.append({"sender":"agent","text":agent_msg,"day":st.session_state.ws_day})
-
-                customer_entry = {
-                    "sender":   "customer",
-                    "text":     customer_msg,
-                    "day":      st.session_state.ws_day,
-                    "intent":   intent_result["intent"],
-                    "link":     None
-                }
-
-                if intent_result["intent"] in ["promise_to_pay","partial_payment"]:
-                    link = intent_result.get("link","")
-                    customer_entry["link"] = link
-                    if link:
-                        st.session_state.ws_links.append(link)
-
-                st.session_state.ws_conv.append(customer_entry)
-                st.session_state.ws_day += 2
-                st.session_state.ws_status = intent_result["intent"]
-                st.rerun()
-
-    with btn2:
-        if st.button("RESET", use_container_width=True):
-            st.session_state.ws_conv   = []
-            st.session_state.ws_day    = 1
-            st.session_state.ws_status = "active"
-            st.session_state.ws_links  = []
-            st.rerun()
-
-with tab6:
-    st.markdown("## Risk Analysis — Diagnose Revenue Leaks")
-    st.markdown("Pattern analysis across 9,693 conversations to identify WHY revenue leaks and WHO defaults.")
-    st.markdown("---")
-
-    try:
-        import json
-        with open("outputs/risk_analysis.json") as f:
-            risk_data = json.load(f)
-
-        patterns = risk_data.get("patterns", {})
-        leaks    = risk_data.get("revenue_leaks", {})
-
-        # Key stats
-        rk1,rk2,rk3 = st.columns(3)
-        with rk1:
-            st.markdown('<div class="mbox"><div class="mlabel">HIGH RISK RATE</div><div class="mvalue" style="color:#ff3131">38.7%</div><div class="msub">refusal + dispute</div></div>', unsafe_allow_html=True)
-        with rk2:
-            st.markdown('<div class="mbox"><div class="mlabel">HIGHEST RISK REGION</div><div class="mvalue" style="color:#ffd700">Hyderabad</div><div class="msub">53.9% refusal rate</div></div>', unsafe_allow_html=True)
-        with rk3:
-            st.markdown('<div class="mbox"><div class="mlabel">BEST INTERVENTION</div><div class="mvalue">DPD 1-15</div><div class="msub">highest recovery potential</div></div>', unsafe_allow_html=True)
-
-        st.markdown("---")
-        ra,rb = st.columns(2)
-
-        with ra:
-            st.markdown("**REGIONAL RISK PATTERNS**")
-            regional = patterns.get("regional_patterns", {})
-            reg_df = pd.DataFrame([
-                {"Region": k, "Refusal Rate": v["refusal_rate"], "Count": v["total"]}
-                for k,v in regional.items() if v["total"] > 50
-            ]).sort_values("Refusal Rate", ascending=False)
-            if not reg_df.empty:
-                st.bar_chart(reg_df.set_index("Region")["Refusal Rate"])
-
-        with rb:
-            st.markdown("**DPD STAGE ANALYSIS**")
-            dpd_data = patterns.get("dpd_stage_analysis", {})
-            dpd_df = pd.DataFrame([
-                {"Stage": k, "Promise Rate": v["promise_rate"], "Refusal Rate": v["refusal_rate"]}
-                for k,v in dpd_data.items()
-            ])
-            if not dpd_df.empty:
-                st.bar_chart(dpd_df.set_index("Stage"))
-
-        st.markdown("---")
-        st.markdown("**KEY INSIGHTS**")
-        for i, insight in enumerate(patterns.get("key_insights", []), 1):
-            st.markdown(f"`{i}.` {insight}")
-
-        st.markdown("---")
-        st.markdown("**REVENUE LEAK DIAGNOSIS**")
-        segments = leaks.get("at_risk_segments", {})
-        for seg, data in segments.items():
-            col = "#ff3131" if seg == "high_risk" else "#ffd700" if seg == "medium_risk" else "#00ff41"
-            st.markdown(f'<div style="background:#0d0d0d;border:1px solid {col};padding:12px;margin-bottom:8px;font-family:JetBrains Mono,monospace"><span style="color:{col};font-weight:700">{seg.upper()}</span> — {data["count"]} conversations ({data["pct"]}%) → {data["recommended_action"]}</div>', unsafe_allow_html=True)
-
-    except Exception as e:
-        st.code(f"Run src/analysis/risk_analyzer.py first. Error: {e}")
-
-with tab6 if 'tab6' in dir() else st.container():
-    pass
-
-with tab7:
-    st.markdown("## VAADA vs Manual Collections")
-    st.markdown("Side-by-side comparison on the same 10 Hinglish conversations.")
-    st.markdown("---")
-
-    v1,v2 = st.columns(2)
-
-    with v1:
-        st.markdown("### ❌ WITHOUT VAADA")
-        st.markdown("*(Manual collections agent)*")
-        st.code("""
-Conversation 1:
-  Agent reads Hinglish msg : 5 min
-  Understands intent       : 10 min
-  Drafts reply             : 10 min
-  Sends payment link       : 5 min
-  Total per conversation   : 30 min
-
-10 conversations:
-  Total time    : 300 minutes
-  Recovery rate : 25%
-  Recovered     : 2-3 payments
-  Cost per conv : ₹150 (agent time)
-  Monthly cost  : ₹1,50,000
-        """, language=None)
-
-    with v2:
-        st.markdown("### ✅ WITH VAADA")
-        st.markdown("*(Automated Hinglish NLU pipeline)*")
-        st.code("""
-Conversation 1:
-  VAADA reads message      : 0.3s
-  Classifies intent        : 0.1s
-  Extracts PTP             : 0.1s
-  Generates Razorpay link  : 0.5s
-  Total per conversation   : <1 sec
-
-10 conversations:
-  Total time    : 10 seconds
-  Recovery rate : 42.9%
-  Recovered     : 4-5 payments
-  Cost per conv : ₹0 (automated)
-  Monthly cost  : ₹0
-        """, language=None)
-
-    st.markdown("---")
-    st.markdown("**IMPACT ON 10,000 MONTHLY CONVERSATIONS**")
-
-    i1,i2,i3,i4 = st.columns(4)
-    with i1:
-        st.markdown('<div class="mbox"><div class="mlabel">TIME SAVED</div><div class="mvalue">4,998 hrs</div><div class="msub">per month</div></div>', unsafe_allow_html=True)
-    with i2:
-        st.markdown('<div class="mbox"><div class="mlabel">EXTRA RECOVERIES</div><div class="mvalue">+589</div><div class="msub">payments per month</div></div>', unsafe_allow_html=True)
-    with i3:
-        st.markdown('<div class="mbox"><div class="mlabel">EXTRA REVENUE</div><div class="mvalue" style="color:#ffd700">+₹47L</div><div class="msub">at avg ₹8000 EMI</div></div>', unsafe_allow_html=True)
-    with i4:
-        st.markdown('<div class="mbox"><div class="mlabel">AGENT COST SAVED</div><div class="mvalue" style="color:#00cfff">₹15L</div><div class="msub">per month</div></div>', unsafe_allow_html=True)
-
-    st.markdown("---")
-    st.markdown("**THE HINGLISH ADVANTAGE**")
-    st.code("""
-Why Hinglish NLU matters:
-
-  English chatbot sees:  "bhai kal pakka kar dunga 🙏"
-  English chatbot says:  ??? (cannot parse)
-  Result:                No action taken. Revenue lost.
-
-  VAADA sees:            "bhai kal pakka kar dunga 🙏"
-  VAADA understands:     promise_to_pay, tomorrow, Delhi dialect
-  VAADA does:            Generates Razorpay link instantly
-  Result:                Payment recovered.
-    """, language=None)
