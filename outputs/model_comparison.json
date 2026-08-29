@@ -1,0 +1,22 @@
+{
+  "baseline": {
+    "f1": 0.989,
+    "accuracy": 0.989,
+    "model": "TF-IDF + Logistic Regression"
+  },
+  "finetuned": {
+    "f1": 0.6318,
+    "accuracy": 0.69,
+    "model": "Gemma-3-1B QLoRA",
+    "samples": 100
+  },
+  "real_world": {
+    "intent_accuracy": 0.85,
+    "samples": 20,
+    "type": "real Razorpay API validation"
+  },
+  "training": {
+    "epoch3_token_accuracy": 0.8494,
+    "val_loss": 0.552
+  }
+}
