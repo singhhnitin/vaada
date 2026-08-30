@@ -1,0 +1,8 @@
+{
+  "representative_hinglish": {
+    "samples": 31,
+    "f1": 0.3315,
+    "accuracy": 0.4194,
+    "note": "Hand-crafted representative real Hinglish samples across all 5 intents"
+  }
+}
