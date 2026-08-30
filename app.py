@@ -246,6 +246,8 @@ with tab1:
         status.empty()
         prog.empty()
 
+        st.write("DEBUG reminder:", repr(reminder))
+        st.write("DEBUG reply:", repr(reply))
         res = run_pipeline(reminder, reply, dpd, amount, region, tone)
         st.markdown("---")
         st.markdown("### ✓ PIPELINE OUTPUT")
