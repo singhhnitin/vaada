@@ -4,7 +4,6 @@ with tab1:
     st.markdown("Paste a Hinglish WhatsApp reply. VAADA classifies intent, extracts the promise, and generates a real Razorpay link.")
     st.markdown("---")
 
-    # Reordered: promise_to_pay first — it's the strongest visual (real payment link)
     EXAMPLES_ORDERED = [
         EXAMPLES[0],  # Promise to Pay - Delhi
         EXAMPLES[1],  # Partial Payment - Mumbai
@@ -14,36 +13,40 @@ with tab1:
     ]
 
     ex_labels = [e["label"] for e in EXAMPLES_ORDERED]
-    default_idx = 0  # promise_to_pay loads by default
-    chosen = st.selectbox("Load example", ex_labels, index=default_idx)
+    chosen = st.selectbox("Load example", ex_labels, index=0, key="t1_example_select")
     ex = next(e for e in EXAMPLES_ORDERED if e["label"] == chosen)
-    for k in ["reminder", "reply", "dpd", "amount", "region", "tone"]:
-        if k not in st.session_state or st.session_state.get("_last_example") != chosen:
+    if st.session_state.get("_t1_last_example") != chosen:
+        for k in ["reminder", "reply", "dpd", "amount", "region", "tone"]:
             st.session_state[k] = ex[k]
-    st.session_state["_last_example"] = chosen
+        st.session_state["_t1_last_example"] = chosen
 
     reply = st.text_area(
         "Customer's Hinglish message",
         value=st.session_state.get("reply", ""),
         height=100,
-        placeholder="bhai kal pakka kar dunga aaj busy tha 🙏"
+        placeholder="bhai kal pakka kar dunga aaj busy tha 🙏",
+        key="t1_reply"
     )
 
     with st.expander("⚙ ADVANCED — reminder text, DPD, amount, region, tone"):
-        reminder = st.text_area("Agent Reminder", value=st.session_state.get("reminder", ""), height=70)
+        reminder = st.text_area("Agent Reminder", value=st.session_state.get("reminder", ""), height=70, key="t1_reminder")
         c3, c4, c5, c6 = st.columns(4)
+        REGIONS = ["delhi", "mumbai", "hyderabad", "bangalore"]
+        TONES = ["polite", "desperate", "evasive", "angry", "cooperative", "neutral"]
         with c3:
-            dpd = st.number_input("DPD", 1, 90, st.session_state.get("dpd", 8))
+            dpd = st.number_input("DPD", 1, 90, st.session_state.get("dpd", 8), key="t1_dpd")
         with c4:
-            amount = st.number_input("Amount (Rs)", 500, 100000, st.session_state.get("amount", 5000), step=500)
+            amount = st.number_input("Amount (Rs)", 500, 100000, st.session_state.get("amount", 5000), step=500, key="t1_amount")
         with c5:
-            region = st.selectbox("Region", ["delhi", "mumbai", "hyderabad", "bangalore"],
-                                   index=["delhi", "mumbai", "hyderabad", "bangalore"].index(st.session_state.get("region", "delhi")))
+            region = st.selectbox("Region", REGIONS,
+                                   index=REGIONS.index(st.session_state.get("region", "delhi")) if st.session_state.get("region") in REGIONS else 0,
+                                   key="t1_region")
         with c6:
-            tone = st.selectbox("Tone", ["polite", "desperate", "evasive", "angry", "cooperative", "neutral"],
-                                 index=["polite", "desperate", "evasive", "angry", "cooperative", "neutral"].index(st.session_state.get("tone", "polite")) if st.session_state.get("tone") in ["polite","desperate","evasive","angry","cooperative","neutral"] else 0)
+            tone = st.selectbox("Tone", TONES,
+                                 index=TONES.index(st.session_state.get("tone", "polite")) if st.session_state.get("tone") in TONES else 0,
+                                 key="t1_tone")
 
-    run_btn = st.button("▶ RUN VAADA PIPELINE", use_container_width=True, type="primary")
+    run_btn = st.button("▶ RUN VAADA PIPELINE", use_container_width=True, type="primary", key="t1_run")
 
     if run_btn and reply:
         st.markdown("---")
@@ -83,7 +86,6 @@ with tab1:
         action = res.get("action", "SCHEDULE_FOLLOWUP")
         ac     = ACFG.get(action, {"color": "#00ff41", "label": action})
 
-        # ── Loud, unmissable action panel ──
         if "link" in res:
             st.markdown(
                 '<div style="background:#001a0a;border:2px solid #00ff41;padding:24px;margin-top:16px">'
