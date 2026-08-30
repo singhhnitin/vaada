@@ -144,9 +144,10 @@ On **August 18, 2026**, Razorpay launched **[Vulcan](https://razorpay.com)** —
 ### Model Performance
 | Model | Accuracy | F1 (weighted) | Notes |
 |-------|----------|---------------|-------|
-| **Baseline** (TF-IDF + LR) | 0.9890 | **0.9890** | In-distribution synthetic test |
-| **Fine-tuned** (Gemma-3-1B QLoRA) | 0.6900 | 0.6318 | Generative model, 100 samples |
-| **Real-world** (20 Razorpay API cases) | **0.8500** | — | Most credible metric |
+| **Baseline** (TF-IDF + LR) | 0.9890 | **0.9890** | Synthetic test set (1454 samples) |
+| **Fine-tuned** (Gemma-3-1B QLoRA) | 0.7345 | **0.7292** | Full 1454 test samples |
+| **Real-world** (20 Razorpay API cases) | **0.8500** | — | Most credible — real conversations |
+| **External** (real Hinglish) | 0.4194 | 0.3315 | Out-of-distribution generalization |
 | Training Token Accuracy | — | — | Epoch 3: **84.9%** ✓ |
 
 ### Per-Class Baseline Performance
