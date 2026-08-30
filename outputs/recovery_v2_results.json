@@ -1,0 +1,10 @@
+{
+  "model": "LogisticRegression (leakage-free)",
+  "cv_f1_mean": 0.6287,
+  "cv_f1_std": 0.009,
+  "test_f1": 0.6287,
+  "test_accuracy": 0.6252,
+  "features_used": "tone, region, dpd, amount, text_signals \u2014 NOT intent",
+  "leakage_free": true,
+  "note": "Previous F1=1.0 was due to using intent as feature. This version excludes it."
+}
