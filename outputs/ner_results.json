@@ -1,0 +1,6 @@
+{
+  "date_precision": 0.9577,
+  "date_recall": 0.9468,
+  "amt_precision": 0.9799,
+  "amt_recall": 0.5602
+}
