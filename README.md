@@ -321,6 +321,14 @@ On 10,000 monthly Hinglish collections conversations:
 
 ---
 
+## ⚖️ Compliance
+
+VAADA is built for India's regulated fintech environment.
+
+**[→ Full Compliance Documentation](COMPLIANCE.md)** — RBI Fair Practices Code, DPDP Act, Legal Notice Pathway, Audit Trail.
+
+---
+
 ## 🔮 Roadmap
 
 ```
