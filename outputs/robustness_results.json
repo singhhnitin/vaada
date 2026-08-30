@@ -1,0 +1,118 @@
+{
+  "tests": [
+    {
+      "test_type": "gibberish",
+      "reply": "asdfghjkl qwerty",
+      "routed": false,
+      "intent": "refusal",
+      "confidence": 0.546116426092214,
+      "route_reason": null,
+      "status": "MISSED (should have routed, got: refusal)"
+    },
+    {
+      "test_type": "symbols_only",
+      "reply": "!!!@@##$$%%",
+      "routed": true,
+      "intent": null,
+      "confidence": 0.0,
+      "route_reason": "invalid_input_gibberish",
+      "status": "CORRECT (routed to human)"
+    },
+    {
+      "test_type": "repeated_chars",
+      "reply": "aaaaaaaaaaaaaaaa",
+      "routed": true,
+      "intent": null,
+      "confidence": 0.0,
+      "route_reason": "invalid_input_repeated_chars",
+      "status": "CORRECT (routed to human)"
+    },
+    {
+      "test_type": "too_short",
+      "reply": "x",
+      "routed": true,
+      "intent": null,
+      "confidence": 0.0,
+      "route_reason": "invalid_input_too_short",
+      "status": "CORRECT (routed to human)"
+    },
+    {
+      "test_type": "south_indian_hinglish",
+      "reply": "anna definitely maadtini bekku",
+      "routed": false,
+      "intent": "refusal",
+      "confidence": 0.7018200965221028,
+      "route_reason": null,
+      "status": "OKAY (refusal)"
+    },
+    {
+      "test_type": "mumbai_hinglish",
+      "reply": "arre nako tension re",
+      "routed": false,
+      "intent": "refusal",
+      "confidence": 0.8683304154988042,
+      "route_reason": null,
+      "status": "OKAY (refusal)"
+    },
+    {
+      "test_type": "sarcasm",
+      "reply": "haan haan bilkul bilkul karunga",
+      "routed": true,
+      "intent": null,
+      "confidence": 0.0,
+      "route_reason": "sarcasm_detected",
+      "status": "CORRECT (routed to human)"
+    },
+    {
+      "test_type": "too_ambiguous",
+      "reply": "ok",
+      "routed": true,
+      "intent": null,
+      "confidence": 0.0,
+      "route_reason": "invalid_input_too_short",
+      "status": "CORRECT (routed to human)"
+    },
+    {
+      "test_type": "evasive_ambiguous",
+      "reply": "dekhte hain",
+      "routed": false,
+      "intent": "refusal",
+      "confidence": 0.6052727010010355,
+      "route_reason": null,
+      "status": "OKAY (refusal)"
+    },
+    {
+      "test_type": "normal_promise",
+      "reply": "bhai kal pakka kar dunga",
+      "routed": false,
+      "intent": "dispute",
+      "confidence": 0.7665279699481684,
+      "route_reason": null,
+      "status": "CORRECT (classified: dispute)"
+    },
+    {
+      "test_type": "normal_refusal",
+      "reply": "nahi karunga band karo",
+      "routed": false,
+      "intent": "refusal",
+      "confidence": 0.9394016231958462,
+      "route_reason": null,
+      "status": "CORRECT (classified: refusal)"
+    },
+    {
+      "test_type": "normal_partial",
+      "reply": "aadha abhi baaki baad mein",
+      "routed": false,
+      "intent": "partial_payment",
+      "confidence": 0.9116847137822773,
+      "route_reason": null,
+      "status": "CORRECT (classified: partial_payment)"
+    }
+  ],
+  "summary": {
+    "total": 12,
+    "routed_correctly": 5,
+    "classified_correctly": 3,
+    "robustness_score": 0.667
+  }
+}
