@@ -150,6 +150,9 @@ with st.sidebar:
     st.markdown("## VAADA v1.0")
     st.markdown("Vernacular Agentic AI for Debt and Arrears")
     st.markdown("---")
+    import sklearn, hashlib
+    st.markdown("`sklearn: " + sklearn.__version__ + "`")
+    st.markdown("`model hash: " + hashlib.md5(open("models/baseline_pipeline.pkl","rb").read()).hexdigest()[:8] + "`")
     st.markdown("**MODEL STATUS**")
     st.markdown("OK Intent Classifier" if MODELS["intent"] else "MISSING Intent Classifier")
     st.markdown("OK Recovery Predictor" if MODELS["recovery"] else "MISSING Recovery Predictor")
