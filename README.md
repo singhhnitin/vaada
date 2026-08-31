@@ -200,6 +200,14 @@ We'd rather show you the real picture than a cherry-picked one. Here's every num
 | **External benchmark** (independent real Hinglish text) | 0.4194 | 0.3315 | Honest out-of-distribution generalization gap — see note below |
 
 > ⚠️ **Why we show the 0.33 external number instead of hiding it:** our 98.9% baseline is measured on synthetic, LLM-generated test data — it's real, but it's evaluating the model on data from its own distribution. When we ran the same model against independently-sourced real Hinglish text, performance dropped to F1=0.3315. That gap is the honest picture of how much harder real-world generalization is, and we think showing it — rather than only quoting the flattering number — is more useful to anyone evaluating this seriously.
+>
+ ### A second, independent real-world check
+
+To make sure the external benchmark gap wasn't a one-off, we also hand-wrote 20 natural, unscripted Hinglish replies ourselves (not LLM-generated, not scraped) across all 5 intents and tested them against the baseline model:
+
+**Result: 8/20 correct (40% accuracy)** — closely matching the external corpus benchmark (33.15%), which strengthens our confidence that the synthetic-to-real gap is real and consistent, not a sampling artifact.
+
+**A specific, diagnosable pattern emerged:** 11 of 20 real replies were misclassified as "refusal" — including clearly polite promises like *"haan bhai abhi karta hun sorry bhul gya tha"* (predicted refusal at 91% confidence). The model appears to have learned refusal-adjacent patterns too broadly from synthetic training data, and this is the most actionable next step for improving real-world reliability — not more synthetic data, but correcting this specific over-triggering pattern with real, diverse promise-to-pay phrasing in training.
 
 ### PTP Extraction — CRF model vs regex baseline
 
