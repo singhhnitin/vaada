@@ -17,8 +17,52 @@
 [![Dataset](https://img.shields.io/badge/📊_Dataset-9693_samples-20BEFF?style=for-the-badge)](https://www.kaggle.com/datasets/nitinsingh1204/vaada-hinglish-collections)
 [![Razorpay](https://img.shields.io/badge/💳_Razorpay-Test_API-blue?style=for-the-badge)](https://razorpay.com/buildathon)
 [![Track](https://img.shields.io/badge/🏆_Revenue-Recovery_Track-orange?style=for-the-badge)](https://razorpay.com/buildathon)
+[![Compliance](https://img.shields.io/badge/⚖️_RBI_%2B_DPDP-Compliant-lightgrey?style=for-the-badge)](COMPLIANCE.md)
+
+> ⏳ **Note:** the live demo runs on Streamlit's free tier and sleeps after inactivity — first load may take 10–15 seconds to wake up. Just refresh once if it looks stuck.
 
 </div>
+
+---
+
+## 🧒 What VAADA does, explained simply
+
+**The problem:** A shop owner is owed money. They message the customer on WhatsApp:
+> *"Rahul ji, Rs 5000 EMI 8 din se overdue hai. Aaj payment karein."*
+
+The customer replies:
+> *"bhai kal pakka kar dunga aaj office mein busy tha 🙏"*
+
+A computer that only understands English has no idea what just happened. **VAADA reads that reply, understands it, and acts on it — automatically.**
+
+```
+ 1. CUSTOMER TEXTS BACK IN HINGLISH
+    "bhai kal pakka kar dunga..."
+              │
+              ▼
+ 2. VAADA READS IT
+    → What did they mean?  →  "They're promising to pay tomorrow"
+              │
+              ▼
+ 3. VAADA PULLS OUT THE DETAILS
+    → When?     tomorrow
+    → How much? ₹5,000
+              │
+              ▼
+ 4. VAADA DECIDES WHAT TO DO
+    → Since they promised to pay → send them a real payment link
+              │
+              ▼
+ 5. VAADA TALKS TO RAZORPAY
+    → Generates an actual, working Razorpay payment link
+    → https://rzp.io/l/xxxxx
+              │
+              ▼
+ 6. MONEY GETS RECOVERED
+    → No human had to read the message, understand it, or type a reply
+```
+
+**Why this matters to Razorpay specifically:** Razorpay just launched **Vulcan**, an AI model that's brilliant at moving money — routing payments, catching fraud, optimizing checkout. But Vulcan doesn't read WhatsApp messages. It doesn't know what "pakka kar dunga" means. **That's the gap VAADA fills** — the conversation layer that comes *before* the payment layer Vulcan already owns.
 
 ---
 
@@ -36,7 +80,7 @@ On **August 18, 2026**, Razorpay launched **[Vulcan](https://razorpay.com)** —
 │   (Launched Aug 18, 2026)    │   (Revenue Recovery Track)           │
 ├──────────────────────────────┼──────────────────────────────────────┤
 │  ✅ Payment routing          │  ✅ Hinglish intent classification   │
-│  ✅ Fraud detection          │  ✅ Promise-to-Pay extraction        │
+│  ✅ Fraud detection          │  ✅ Promise-to-Pay extraction (CRF)  │
 │  ✅ Checkout optimization    │  ✅ Multi-turn conversation tracking  │
 │  ✅ 3T data points trained   │  ✅ Proactive default risk detection  │
 │  ❌ WhatsApp/SMS NLU        │  ✅ Real Razorpay payment link gen    │
@@ -83,14 +127,16 @@ On **August 18, 2026**, Razorpay launched **[Vulcan](https://razorpay.com)** —
                     │   │   TF-IDF + Logistic Reg.     │   │
                     │   │       F1 = 0.9890            │   │
                     │   │   +  Gemma-3-1B QLoRA        │   │
-                    │   │   84.9% token accuracy       │   │
+                    │   │   research variant, F1=0.7292 │   │
                     │   └──────────────────────────────┘   │
                     │                                       │
                     │   ┌──────────────────────────────┐   │
-                    │   │      PTP Extractor            │   │
-                    │   │  Rule-based + Regex           │   │
-                    │   │  Date recall: 62.5%           │   │
-                    │   │  Amount recall: 37.5%         │   │
+                    │   │   PTP Extractor (CRF model)   │   │
+                    │   │  Conditional Random Field     │   │
+                    │   │  Date recall:   94.68%        │   │
+                    │   │  Amount recall: 56.02%        │   │
+                    │   │  (vs regex baseline: 62.5% /  │   │
+                    │   │   37.5% — CRF is the upgrade) │   │
                     │   └──────────────────────────────┘   │
                     └───────────────────┬──────────────────┘
                                         │
@@ -99,8 +145,9 @@ On **August 18, 2026**, Razorpay launched **[Vulcan](https://razorpay.com)** —
                     │                                       │
                     │   ┌──────────────────────────────┐   │
                     │   │    Recovery Predictor         │   │
-                    │   │  GradientBoostingClassifier   │   │
-                    │   │       F1 = 1.0000            │   │
+                    │   │  Logistic Regression          │   │
+                    │   │  Leakage-free, 5-fold CV       │   │
+                    │   │       F1 = 0.6287            │   │
                     │   └──────────────────────────────┘   │
                     │                                       │
                     │   ┌──────────────────────────────┐   │
@@ -131,26 +178,49 @@ On **August 18, 2026**, Razorpay launched **[Vulcan](https://razorpay.com)** —
               ┌─────────────────────────▼──────────────────────────┐
               │              RAZORPAY TEST API (REAL)               │
               │                                                     │
-              │   Real payment links · rzp.io/rzp/xxxxx            │
-              │   Partial payment support · 24-hour expiry         │
+              │   Real payment links · rzp.io/l/xxxxx               │
+              │   Partial payment support · 24-hour expiry          │
               │   Live API calls · Verified working                 │
               └─────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 📊 Results
+## 📊 Results — reported honestly, including the hard numbers
+
+We'd rather show you the real picture than a cherry-picked one. Here's every number, including the ones that expose real limitations.
 
 ### Model Performance
+
 | Model | Accuracy | F1 (weighted) | Notes |
 |-------|----------|---------------|-------|
-| **Baseline** (TF-IDF + LR) | 0.9890 | **0.9890** | Synthetic test set (1454 samples) |
-| **Fine-tuned** (Gemma-3-1B QLoRA) | 0.7345 | **0.7292** | Full 1454 test samples |
-| **Real-world** (20 Razorpay API cases) | **0.8500** | — | Most credible — real conversations |
-| **External** (real Hinglish) | 0.4194 | 0.3315 | Out-of-distribution generalization |
-| Training Token Accuracy | — | — | Epoch 3: **84.9%** ✓ |
+| **Baseline** (TF-IDF char n-grams + LR) | 0.9890 | **0.9890** | In-distribution synthetic test set (1,454 samples) |
+| **Fine-tuned** (Gemma-3-1B QLoRA) | 0.7345 | **0.7292** | Full 1,454 test samples — research variant |
+| **Real-world** (20 real Razorpay API cases) | **0.8500** | — | Most credible metric — actual conversations, actual API calls |
+| **External benchmark** (independent real Hinglish text) | 0.4194 | 0.3315 | Honest out-of-distribution generalization gap — see note below |
+
+> ⚠️ **Why we show the 0.33 external number instead of hiding it:** our 98.9% baseline is measured on synthetic, LLM-generated test data — it's real, but it's evaluating the model on data from its own distribution. When we ran the same model against independently-sourced real Hinglish text, performance dropped to F1=0.3315. That gap is the honest picture of how much harder real-world generalization is, and we think showing it — rather than only quoting the flattering number — is more useful to anyone evaluating this seriously.
+
+### PTP Extraction — CRF model vs regex baseline
+
+```
+                    Date Recall    Amount Recall
+Regex baseline         62.5%          37.5%
+CRF model (shipped)    94.68%         56.02%   ← +32pt / +18pt improvement
+```
+
+We started with regex extraction, found its recall too low to trust for real payment amounts, and replaced it with a trained Conditional Random Field model — the CRF is what ships in the live app today.
+
+### Recovery Predictor — fixed a leakage bug, reporting honestly
+
+An earlier version of this model scored a suspicious F1=1.0000 — a near-perfect score is usually a sign of data leakage, not a good model. We diagnosed it, rebuilt the evaluation with proper 5-fold cross-validation and no leakage, and the honest score is **F1 = 0.6287**. We're reporting the corrected number, not the inflated one.
+
+### Adversarial Robustness
+
+Tested against deliberately tricky input (typos, code-switching, sarcasm, gibberish): **66.7% handled correctly**, and critically, **the remainder fails safely** — routing to human review instead of taking a wrong automated action. For a system that generates real payment links, failing safely matters more than raw accuracy.
 
 ### Per-Class Baseline Performance
+
 ```
                  precision    recall  f1-score
 promise_to_pay     1.000      0.994    1.000   ← strongest
@@ -163,6 +233,7 @@ weighted avg       0.989      0.989    0.989
 ```
 
 ### Risk Analysis — Revenue Leak Diagnosis
+
 ```
 ┌──────────────────────────────────────────────────────────┐
 │         DIAGNOSED ACROSS 9,693 CONVERSATIONS            │
@@ -181,7 +252,7 @@ weighted avg       0.989      0.989    0.989
 
 ## 🗃️ Dataset — First of its Kind
 
-> **VAADA-Hinglish-Collections** — does not exist anywhere publicly.
+> **VAADA-Hinglish-Collections** — does not exist anywhere publicly. [→ View on Kaggle](https://www.kaggle.com/datasets/nitinsingh1204/vaada-hinglish-collections)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -191,17 +262,17 @@ weighted avg       0.989      0.989    0.989
 │  Delhi      yaar / bhai / pakka / turant / sun             │
 │  Mumbai     arre / nako / re / kay / lagech                 │
 │  Hyderabad  boss / anna / okay ra / definitely              │
-│  Bangalore  sir / illa / UPI maadtini / bekku              │
+│  Bangalore  sir / illa / UPI maadtini / bekku               │
 ├─────────────────────────────────────────────────────────────┤
 │  DPD STAGES:                                                │
-│  Soft   (1-15d)   Polite, friendly, payment link           │
-│  Mid   (15-30d)   Firm, CIBIL score warning                │
-│  Hard  (30-60d)   Serious, legal notice warning            │
-│  Severe(60-90d)   Settlement offer or legal action         │
+│  Soft   (1-15d)   Polite, friendly, payment link            │
+│  Mid   (15-30d)   Firm, CIBIL score warning                 │
+│  Hard  (30-60d)   Serious, legal notice warning              │
+│  Severe(60-90d)   Settlement offer or legal action           │
 ├─────────────────────────────────────────────────────────────┤
-│  Generated: Llama-3.1-70B via NVIDIA API                   │
-│  Augmented: Rule-based pipeline (9,693 final samples)      │
-│  Compliant: RBI guidelines (no threats, no family contact) │
+│  Generated: Llama-3.1-70B via NVIDIA API                    │
+│  Augmented: Rule-based pipeline (9,693 final samples)        │
+│  Compliant: RBI guidelines (no threats, no family contact)   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -213,12 +284,13 @@ weighted avg       0.989      0.989    0.989
 
 | Tab | What it does |
 |-----|-------------|
-| 🚀 **LIVE DEMO** | Paste Hinglish message → real Razorpay link generated |
-| 📊 **EVAL RESULTS** | Full evaluation metrics, confusion matrix |
+| 🚀 **LIVE DEMO** | Paste a Hinglish message → real Razorpay link generated |
+| 📊 **EVAL RESULTS** | Full evaluation metrics, confusion matrix, honest external benchmark |
 | 💹 **BUSINESS IMPACT** | ₹ recovered simulation vs manual collections |
 | 📂 **DATASET** | Browse VAADA dataset with dialect examples |
-| 💬 **WHATSAPP SIM** | Simulate multi-day collections thread live |
+| 💬 **WHATSAPP SIM** | Simulate a multi-day collections thread live |
 | 🔍 **RISK ANALYSIS** | Diagnose revenue leaks by region and DPD |
+| ⚖️ **VAADA VS MANUAL** | Side-by-side comparison with manual collections |
 
 ---
 
@@ -238,14 +310,20 @@ streamlit run app.py
 # Run pipeline demo
 python3 -m src.pipeline
 
+# Retrain the baseline classifier
+python3 src/nlu/baseline.py
+
+# Train / evaluate the CRF PTP extractor
+python3 src/nlu/ner_ptp.py
+
 # Run real-world validation
 python3 -m src.eval.real_validation
 
+# Run external benchmark (honest generalization check)
+python3 -m src.eval.external_benchmark
+
 # Run risk analysis
 python3 -m src.analysis.risk_analyzer
-
-# Run multi-turn tracker
-python3 -m src.nlu.multi_turn_tracker
 ```
 
 ---
@@ -254,45 +332,50 @@ python3 -m src.nlu.multi_turn_tracker
 
 ```
 vaada/
-├── app.py                          # Streamlit app (6 tabs)
+├── app.py                          # Streamlit app (7 tabs)
+├── COMPLIANCE.md                   # RBI / DPDP Act / legal notice pathway
 ├── src/
 │   ├── pipeline.py                 # End-to-end pipeline + Razorpay API
 │   ├── nlu/
 │   │   ├── baseline.py             # TF-IDF + LR classifier (F1=0.9890)
-│   │   ├── ptp_extractor.py        # Promise-to-Pay extraction
-│   │   ├── recovery_predictor.py   # Default likelihood scoring
+│   │   ├── ner_ptp.py              # CRF-based PTP extractor (94.68% date recall)
+│   │   ├── ptp_extractor.py        # Legacy regex extractor (kept for comparison)
+│   │   ├── recovery_predictor.py   # Leakage-free default likelihood scoring
 │   │   ├── multi_turn_tracker.py   # 5-day thread tracking
 │   │   ├── proactive_risk.py       # Early warning system
+│   │   ├── robustness.py           # Adversarial robustness testing
 │   │   └── evaluate_finetuned.py   # Fine-tuned model evaluation
 │   ├── agent/
-│   │   ├── razorpay_client.py      # Real Razorpay Test API
-│   │   └── workflow.py             # Decision engine
+│   │   └── razorpay_client.py      # Real Razorpay Test API
 │   ├── analysis/
 │   │   └── risk_analyzer.py        # Revenue leak diagnosis
 │   ├── datagen/
 │   │   ├── llm_generate.py         # LLM-based data generation
 │   │   └── augment.py              # Augmentation to 9,693 samples
 │   └── eval/
-│       └── real_validation.py      # 20 real test cases with API
+│       ├── real_validation.py      # 20 real test cases with API
+│       └── external_benchmark.py   # Independent real-Hinglish generalization check
 ├── models/
-│   ├── baseline_pipeline.pkl       # Trained baseline
-│   ├── recovery_predictor.pkl      # GBM recovery predictor
-│   └── vaada-gemma3-1b/            # Fine-tuned Gemma-3-1B adapter
+│   ├── baseline_pipeline.pkl       # Trained baseline (TF-IDF + LR)
+│   ├── ptp_crf.pkl                 # Trained CRF PTP extractor
+│   └── recovery_predictor.pkl      # Leakage-free recovery predictor
 ├── outputs/
 │   ├── baseline_results.json
+│   ├── ner_results.json            # CRF vs regex comparison
 │   ├── real_validation.json        # 85% accuracy on real cases
+│   ├── recovery_results.json       # Leakage-free F1=0.6287
 │   ├── risk_analysis.json
-│   ├── model_comparison.json
-│   └── dashboard.html              # Terminal-aesthetic metrics dashboard
+│   └── robustness_results.json     # 66.7% adversarial handling
 └── architecture.md                 # Detailed architecture
 ```
 
 ---
 
-## 💰 Business Impact
+## 💰 Business Impact — projected from validated rates
 
 ```
-On 10,000 monthly Hinglish collections conversations:
+Based on our 85% real-world validation rate, applied to a 10,000
+conversation/month scenario:
 
   VAADA auto-handles   →  5,710 conversations  (57.1%)
   Payment links sent   →  4,290 conversations  (42.9%)
@@ -305,16 +388,19 @@ On 10,000 monthly Hinglish collections conversations:
   At avg ₹8,000 EMI = ₹47 lakh additional monthly recovery
 ```
 
+> Note: this is a **projection** built from our validated real-world accuracy rate, not a measured result from a live production batch. We're stating that distinction explicitly rather than implying it's already-realized revenue.
+
 ---
 
 ## 🔧 Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Data Generation | Llama-3.1-70B · NVIDIA API · Augmentation pipeline |
-| NLU Baseline | TF-IDF · Logistic Regression · scikit-learn |
+| Data Generation | Llama-3.1-70B · NVIDIA API · Rule-based augmentation |
+| NLU Baseline | TF-IDF (char n-grams) · Logistic Regression · scikit-learn |
 | NLU Fine-tuned | Gemma-3-1B · QLoRA · HuggingFace PEFT · TRL |
-| Recovery Model | GradientBoostingClassifier |
+| PTP Extraction | Conditional Random Field · sklearn-crfsuite |
+| Recovery Model | Logistic Regression (leakage-free, 5-fold CV) |
 | Payment API | **Razorpay Test-mode REST API** (real links) |
 | Frontend | Streamlit · Streamlit Cloud |
 | Training | Kaggle T4 GPU · 3 epochs · 84.9% token accuracy |
@@ -332,9 +418,10 @@ VAADA is built for India's regulated fintech environment.
 ## 🔮 Roadmap
 
 ```
-v1.0  ✅  Hinglish NLU + Razorpay API + 6-tab Streamlit app
-v1.1  →   WhatsApp Business API integration
-v1.2  →   Gemma-3-1B inference endpoint deployment
+v1.0  ✅  Hinglish NLU + Razorpay API + 7-tab Streamlit app
+v1.1  ✅  CRF PTP extractor, leakage-free recovery model, honest external benchmark
+v1.2  →   WhatsApp Business API integration
+v1.3  →   Gemma-3-1B inference endpoint deployment
 v2.0  →   Tamil, Telugu, Marathi language support
 v2.1  →   Voice-to-text + Hinglish NLU unified pipeline
 v3.0  →   VAADA + Vulcan unified collections intelligence API
