@@ -3,14 +3,15 @@ razorpay_client.py — Real Razorpay API integration for VAADA
 Generates actual test-mode payment links via Razorpay API
 """
 
+import os
 import requests
 import json
 from requests.auth import HTTPBasicAuth
 from datetime import datetime, timedelta
 
 # ── Test mode credentials ─────────────────────────────────────
-KEY_ID     = "rzp_test_TTx0MUekIou9qf"
-KEY_SECRET = "M52VR9dXFm7WKXraaXXrOh1I"
+KEY_ID     = os.environ.get("RAZORPAY_KEY_ID")
+KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET")
 BASE_URL   = "https://api.razorpay.com/v1"
 AUTH       = HTTPBasicAuth(KEY_ID, KEY_SECRET)
 HEADERS    = {"Content-Type": "application/json"}
