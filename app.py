@@ -151,8 +151,6 @@ with st.sidebar:
     st.markdown("Vernacular Agentic AI for Debt and Arrears")
     st.markdown("---")
     import sklearn, hashlib
-    st.markdown("`sklearn: " + sklearn.__version__ + "`")
-    st.markdown("`model hash: " + hashlib.md5(open("models/baseline_pipeline.pkl","rb").read()).hexdigest()[:8] + "`")
     st.markdown("**MODEL STATUS**")
     st.markdown("OK Intent Classifier" if MODELS["intent"] else "MISSING Intent Classifier")
     st.markdown("OK Recovery Predictor" if MODELS["recovery"] else "MISSING Recovery Predictor")
@@ -249,8 +247,6 @@ with tab1:
         status.empty()
         prog.empty()
 
-        st.write("DEBUG reminder:", repr(reminder))
-        st.write("DEBUG reply:", repr(reply))
         res = run_pipeline(reminder, reply, dpd, amount, region, tone)
         st.markdown("---")
         st.markdown("### ✓ PIPELINE OUTPUT")
