@@ -2,4 +2,4 @@ streamlit
 pandas
 numpy
 requests
-scikit-learn
+scikit-learn==1.9.0
