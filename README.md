@@ -201,7 +201,7 @@ We'd rather show you the real picture than a cherry-picked one. Here's every num
 
 > ⚠️ **Why we show the 0.33 external number instead of hiding it:** our 98.9% baseline is measured on synthetic, LLM-generated test data — it's real, but it's evaluating the model on data from its own distribution. When we ran the same model against independently-sourced real Hinglish text, performance dropped to F1=0.3315. That gap is the honest picture of how much harder real-world generalization is, and we think showing it — rather than only quoting the flattering number — is more useful to anyone evaluating this seriously.
 >
-> ### A second, independent real-world check
+ ### A second, independent real-world check
 
 To make sure the external benchmark gap wasn't a one-off, we also hand-wrote 20 natural, unscripted Hinglish replies ourselves (not LLM-generated, not scraped) across all 5 intents and tested them against the baseline model:
 
