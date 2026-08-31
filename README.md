@@ -459,10 +459,3 @@ v3.0  →   VAADA + Vulcan unified collections intelligence API
 </div>
 
 
-### A second, independent real-world check
-
-To make sure the external benchmark gap wasn't a one-off, we also hand-wrote 20 natural, unscripted Hinglish replies ourselves (not LLM-generated, not scraped) across all 5 intents and tested them against the baseline model.
-
-**Result: 8/20 correct (40% accuracy)** — closely matching the external corpus benchmark (33.15%), which strengthens our confidence that the synthetic-to-real gap is real and consistent, not a sampling artifact.
-
-**A specific, diagnosable pattern emerged:** 11 of 20 real replies were misclassified as refusal, including clearly polite promises like "haan bhai abhi karta hun sorry bhul gya tha" (predicted refusal at 91% confidence). The model appears to have learned refusal-adjacent patterns too broadly from synthetic training data, and this is the most actionable next step for improving real-world reliability — not more synthetic data, but correcting this specific over-triggering pattern with real, diverse promise-to-pay phrasing in training.
