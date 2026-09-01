@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VAADA — Vernacular Agentic AI for Debt &amp; Arrears</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="brand">
+    <svg viewBox="0 0 40 40" width="24" height="24"><g fill="none" stroke="#E4552B" stroke-width="2"><rect x="4" y="4" width="32" height="32"/><path d="M4 14h32M4 26h32"/></g></svg>
+    <span class="brand-word">VAADA</span>
+    <span class="brand-sub">VERNACULAR AGENTIC AI FOR DEBT &amp; ARREARS</span>
+  </div>
+  <div class="nav-meta">NITIN SINGH · REVENUE RECOVERY TRACK</div>
+  <button class="run" id="run" type="button">▷ RUN THE PIPELINE</button>
+</nav>
+
+<div class="wrap">
+  <header class="hero">
+    <h1>Vulcan routes payments.<br>VAADA <span>understands people.</span></h1>
+    <p>Most Indian SMB collections happen over WhatsApp text in Hinglish, where payment infrastructure sees nothing. VAADA takes the message in and prints what it understood — intent, promise, risk, and a live Razorpay link — one tape per account, line by line.</p>
+  </header>
+</div>
+
+<div class="wrap stage">
+  <section class="col-in">
+    <div class="kicker" style="margin-bottom:26px">IN — RAW INBOUND · THREAD 0114 · 5-DAY MEMORY</div>
+    <div id="thread"></div>
+    <div class="feeding" id="feeding">
+      <svg viewBox="0 0 24 24" width="14" height="14"><g fill="none" stroke="#E4552B" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 3v4"/></g></svg>
+      <span>TAPE FEEDING</span>
+    </div>
+    <div class="note-block">
+      <div class="kicker" style="margin-bottom:16px">WHY THIS LAYER IS MISSING</div>
+      <p>“6 tarikh” is a date. “pakka” is a commitment. “dekhta hoon” is not. Payment infrastructure never sees this text, and a call centre hears it once and forgets it.</p>
+      <div class="kv">
+        <div><span>INTENT CLASSES</span><span>5</span></div>
+        <div><span>DIALECTS</span><span>DELHI · MUMBAI · HYD · BLR</span></div>
+        <div><span>DPD STAGES</span><span>SOFT · MID · HARD · SEVERE</span></div>
+        <div><span>BEST WINDOW</span><span>DPD 1—15</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tape-col">
+    <div class="perf" style="position:absolute;left:34px;right:34px;top:0"></div>
+    <div class="tape">
+      <div class="tape-title">VAADA RECOVERY TAPE</div>
+      <div class="tape-folio"><span>THREAD 0114</span><span>A/C RZ-4471902</span></div>
+      <div class="tape-body"><div id="tape"></div><div class="caret" id="caret" hidden>█</div></div>
+      <div class="stub" id="stub">
+        <div class="stub-label">RAZORPAY PAYMENT LINK · CREATED</div>
+        <div style="margin-top:8px"><a href="#stub">rzp.io/rzp/VD4471902</a></div>
+        <div class="barcode" id="barcode"></div>
+        <div class="stub-fine">PARTIAL PAYMENT ENABLED · EXPIRES 24H · SENT TO THE SAME THREAD</div>
+        <div class="stub-end">— END OF ENTRY —</div>
+      </div>
+    </div>
+    <div class="perf-bottom"></div>
+    <div class="tape-foot"><span id="printed">PRINTED 0 / 15 LINES</span><span>TF-IDF + LOGISTIC REGRESSION</span></div>
+  </section>
+
+  <section class="col-out">
+    <div class="kicker" style="margin-bottom:26px">OUT — WHAT THE ENGINE CLAIMS, AND WHY</div>
+    <div id="notes"></div>
+    <div class="guard" id="guard">
+      <div><span>RBI CONDUCT</span><span style="color:var(--mint)">NO THREATS · NO FAMILY CONTACT</span></div>
+      <div><span>DISPUTE</span><span>ROUTED TO A HUMAN, ALWAYS</span></div>
+      <div><span>REFUSAL</span><span>LEGAL NOTICE WORKFLOW</span></div>
+      <div><span>ENTRY</span><span>IMMUTABLE, WITH ITS SOURCE LINE</span></div>
+    </div>
+  </section>
+</div>
+
+<div class="wrap" style="padding-top:96px">
+  <div class="sec-head">
+    <div class="t">TAPES PRINTED TODAY</div>
+    <div class="m">33.8% RECOVERABLE · 27.5% MEDIUM RISK · 38.7% HIGH RISK</div>
+  </div>
+  <table class="reg">
+    <thead><tr>
+      <th>THREAD</th><th>BORROWER</th><th>LINE THE ENGINE READ</th><th>INTENT</th>
+      <th>DPD</th><th>AMOUNT</th><th>CONF</th><th>RISK</th>
+    </tr></thead>
+    <tbody id="register"></tbody>
+  </table>
+</div>
+
+<div class="wrap">
+  <section class="model">
+    <div>
+      <div class="kicker" style="color:var(--vermilion);margin-bottom:18px">THE MODEL CHOICE, MEASURED</div>
+      <h2>I didn't default to the biggest model. I tested both.</h2>
+      <p>Five fixed intent classes over WhatsApp-length text is a classification problem, not a generation problem. TF-IDF with logistic regression won on the benchmark, runs in milliseconds, costs fractions of a cent per message, and carries no API dependency at 10,000+ messages a month.</p>
+      <p>The fine-tuned Gemma-3-1B scored lower, ran slower and cost more. So the lightweight model isn't a compromise — it's the one that won.</p>
+    </div>
+    <div>
+      <div class="compare">
+        <div class="cell">
+          <div class="tag" style="color:var(--vermilion)">SHIPPED</div>
+          <div class="name">TF-IDF + Logistic<br>Regression</div>
+          <div class="score" style="color:var(--vermilion)">0.989</div>
+          <div class="score-l">F1, SYNTHETIC BENCHMARK</div>
+          <div class="kv">
+            <div><span>LATENCY</span><span>ms</span></div>
+            <div><span>COST / MSG</span><span>~0</span></div>
+            <div><span>API DEPENDENCY</span><span>NONE</span></div>
+          </div>
+        </div>
+        <div style="background:var(--line)"></div>
+        <div class="cell">
+          <div class="tag" style="color:var(--mute)">RESEARCHED</div>
+          <div class="name">Gemma-3-1B<br>QLoRA fine-tune</div>
+          <div class="score" style="color:rgba(242,239,233,.55)">0.729</div>
+          <div class="score-l">F1, SAME BENCHMARK</div>
+          <div class="kv">
+            <div><span>LATENCY</span><span>SECONDS</span></div>
+            <div><span>COST / MSG</span><span>PER-TOKEN</span></div>
+            <div><span>API DEPENDENCY</span><span>YES</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="finding">
+        <div class="num">40%</div>
+        <div>
+          <div class="l">RESEARCH FINDING · NEXT ITERATION</div>
+          <div class="b">Accuracy measured on hand-written natural messages, alongside 98.9% on the synthetic set. Published because it points at the highest-value next step: broader, more diverse real-world training data.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="metrics">
+    <div class="metric"><div class="n" style="color:var(--vermilion)">ms</div><div class="l">MESSAGE TO CLASSIFIED INTENT</div></div>
+    <div class="metric"><div class="n">5</div><div class="l">INTENTS · PTP, REFUSAL, DISPUTE, PARTIAL, SILENCE</div></div>
+    <div class="metric"><div class="n" style="color:var(--mint)">33.8%</div><div class="l">OF THE BOOK SCORED RECOVERABLE</div></div>
+    <div class="metric"><div class="n">24h</div><div class="l">LINK VALIDITY, PARTIAL PAYMENT ON</div></div>
+  </section>
+
+  <footer class="foot">
+    <span>VAADA · वादा — A PROMISE, PRINTED</span>
+    <span>NITIN SINGH · github.com/singhhnitin/vaada</span>
+  </footer>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
