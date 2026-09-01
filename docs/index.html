@@ -20,6 +20,29 @@
   <button class="run" id="run" type="button">▷ RUN THE PIPELINE</button>
 </nav>
 
+<div class="wrap" style="padding:24px 0 0">
+  <div class="kicker" style="margin-bottom:12px">LIVE INPUT — TYPE A REAL HINGLISH REPLY</div>
+  <textarea id="in-reply" rows="2" placeholder="e.g. bhai kal pakka kar dunga aaj busy tha"
+    style="width:100%;background:transparent;border:1px solid var(--line-2);color:var(--paper);
+    font-family:var(--sans);font-size:15px;padding:12px;margin-bottom:12px;resize:vertical"></textarea>
+  <textarea id="in-reminder" rows="1" placeholder="agent reminder e.g. Rahul ji aapki Rs5000 EMI 8 din se overdue hai"
+    style="width:100%;background:transparent;border:1px solid var(--line-2);color:var(--paper);
+    font-family:var(--sans);font-size:14px;padding:10px;margin-bottom:12px;resize:vertical"></textarea>
+  <div style="display:flex;gap:16px;margin-bottom:8px;flex-wrap:wrap;align-items:center">
+    <select id="in-region" style="background:var(--ink);color:var(--paper);border:1px solid var(--line-2);padding:8px 12px;font-family:var(--mono);font-size:11px">
+      <option value="delhi">DELHI</option><option value="mumbai">MUMBAI</option>
+      <option value="hyderabad">HYDERABAD</option><option value="bangalore">BANGALORE</option>
+    </select>
+    <select id="in-tone" style="background:var(--ink);color:var(--paper);border:1px solid var(--line-2);padding:8px 12px;font-family:var(--mono);font-size:11px">
+      <option value="polite">POLITE</option><option value="desperate">DESPERATE</option>
+      <option value="evasive">EVASIVE</option><option value="angry">ANGRY</option>
+    </select>
+    <input id="in-dpd" type="number" value="8" placeholder="DPD" style="width:80px;background:var(--ink);color:var(--paper);border:1px solid var(--line-2);padding:8px 12px;font-family:var(--mono);font-size:11px">
+    <input id="in-amount" type="number" value="5000" placeholder="Amount" style="width:100px;background:var(--ink);color:var(--paper);border:1px solid var(--line-2);padding:8px 12px;font-family:var(--mono);font-size:11px">
+    <span id="api-status" style="font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:rgba(242,239,233,.4)">API: checking...</span>
+  </div>
+</div>
+
 <div class="wrap">
   <header class="hero">
     <h1>Vulcan routes payments.<br>VAADA <span>understands people.</span></h1>
@@ -37,7 +60,7 @@
     </div>
     <div class="note-block">
       <div class="kicker" style="margin-bottom:16px">WHY THIS LAYER IS MISSING</div>
-      <p>“6 tarikh” is a date. “pakka” is a commitment. “dekhta hoon” is not. Payment infrastructure never sees this text, and a call centre hears it once and forgets it.</p>
+      <p>"6 tarikh" is a date. "pakka" is a commitment. "dekhta hoon" is not. Payment infrastructure never sees this text, and a call centre hears it once and forgets it.</p>
       <div class="kv">
         <div><span>INTENT CLASSES</span><span>5</span></div>
         <div><span>DIALECTS</span><span>DELHI · MUMBAI · HYD · BLR</span></div>
@@ -55,7 +78,7 @@
       <div class="tape-body"><div id="tape"></div><div class="caret" id="caret" hidden>█</div></div>
       <div class="stub" id="stub">
         <div class="stub-label">RAZORPAY PAYMENT LINK · CREATED</div>
-        <div style="margin-top:8px"><a href="#stub">rzp.io/rzp/VD4471902</a></div>
+        <div style="margin-top:8px"><a href="#stub" id="link-out">rzp.io/rzp/VD4471902</a></div>
         <div class="barcode" id="barcode"></div>
         <div class="stub-fine">PARTIAL PAYMENT ENABLED · EXPIRES 24H · SENT TO THE SAME THREAD</div>
         <div class="stub-end">— END OF ENTRY —</div>
