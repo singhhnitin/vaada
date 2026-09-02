@@ -1,6 +1,6 @@
 const V = { vermilion:'#E4552B', mint:'#5FD6A4', rose:'#E8607E', ink:'#191621', mid:'rgba(25,22,33,0.62)' };
 
-const API_BASE = 'https://technology-measuring-pets-daniel.trycloudflare.com';
+const API_BASE = 'https://vaada-api.onrender.com';
 
 const $ = s => document.querySelector(s);
 
