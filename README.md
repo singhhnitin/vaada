@@ -1,3 +1,6 @@
+Here's the complete updated README — copy this directly and paste it into GitHub's editor to replace the whole file:
+
+```markdown
 <div align="center">
 
 <pre align="center">
@@ -13,13 +16,13 @@
 
 *The missing communication intelligence layer for Razorpay Vulcan*
 
-[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Streamlit-00ff41?style=for-the-badge&logoColor=white)](https://vaada-hinglish-collections-ai.streamlit.app)
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-GitHub_Pages-00ff41?style=for-the-badge&logoColor=white)](https://singhhnitin.github.io/vaada/)
 [![Dataset](https://img.shields.io/badge/📊_Dataset-9693_samples-20BEFF?style=for-the-badge)](https://www.kaggle.com/datasets/nitinsingh1204/vaada-hinglish-collections)
 [![Razorpay](https://img.shields.io/badge/💳_Razorpay-Test_API-blue?style=for-the-badge)](https://razorpay.com/buildathon)
 [![Track](https://img.shields.io/badge/🏆_Revenue-Recovery_Track-orange?style=for-the-badge)](https://razorpay.com/buildathon)
 [![Compliance](https://img.shields.io/badge/⚖️_RBI_%2B_DPDP-Compliant-lightgrey?style=for-the-badge)](COMPLIANCE.md)
 
-> ⏳ **Note:** the live demo runs on Streamlit's free tier and sleeps after inactivity — first load may take 10–15 seconds to wake up. Just refresh once if it looks stuck.
+> ⏳ **Note:** the backend API runs on Render's free tier, which sleeps after inactivity — the first request may take 20–30 seconds to wake it up. Just wait for the "API: LIVE" indicator on the page before running a query.
 
 </div>
 
@@ -200,14 +203,14 @@ We'd rather show you the real picture than a cherry-picked one. Here's every num
 | **External benchmark** (independent real Hinglish text) | 0.4194 | 0.3315 | Honest out-of-distribution generalization gap — see note below |
 
 > ⚠️ **Why we show the 0.33 external number instead of hiding it:** our 98.9% baseline is measured on synthetic, LLM-generated test data — it's real, but it's evaluating the model on data from its own distribution. When we ran the same model against independently-sourced real Hinglish text, performance dropped to F1=0.3315. That gap is the honest picture of how much harder real-world generalization is, and we think showing it — rather than only quoting the flattering number — is more useful to anyone evaluating this seriously.
->
- ### A second, independent real-world check
+
+### A second, independent real-world check
 
 To make sure the external benchmark gap wasn't a one-off, we also hand-wrote 20 natural, unscripted Hinglish replies ourselves (not LLM-generated, not scraped) across all 5 intents and tested them against the baseline model:
 
 **Result: 8/20 correct (40% accuracy)** — closely matching the external corpus benchmark (33.15%), which strengthens our confidence that the synthetic-to-real gap is real and consistent, not a sampling artifact.
 
-**A specific, diagnosable pattern emerged:** 11 of 20 real replies were misclassified as "refusal" — including clearly polite promises like *"haan bhai abhi karta hun sorry bhul gya tha"* (predicted refusal at 91% confidence). The model appears to have learned refusal-adjacent patterns too broadly from synthetic training data, and this is the most actionable next step for improving real-world reliability — not more synthetic data, but correcting this specific over-triggering pattern with real, diverse promise-to-pay phrasing in training.
+**A specific, diagnosable pattern emerged:** 11 of 20 real replies were misclassified as "refusal" — including clearly polite promises like *"haan bhai abhi karta hun sorry bhul gya tha"* (predicted refusal at 91% confidence). The model appears to have learned refusal-adjacent patterns too broadly from synthetic training data, and this is the most actionable next step for improving real-world reliability — not more synthetic data, but correcting this specific over-triggering pattern with real, diverse promise-to-pay phrasing in training. This pattern is easy to reproduce live in the demo — type a blunt, informal message and it will sometimes still land on an adjacent intent rather than the exact right one.
 
 ### PTP Extraction — CRF model vs regex baseline
 
@@ -288,17 +291,15 @@ weighted avg       0.989      0.989    0.989
 
 ## 🚀 Live Demo
 
-**[→ Try VAADA live](https://vaada-hinglish-collections-ai.streamlit.app)**
+**[→ Try VAADA live](https://singhhnitin.github.io/vaada/)**
 
-| Tab | What it does |
-|-----|-------------|
-| 🚀 **LIVE DEMO** | Paste a Hinglish message → real Razorpay link generated |
-| 📊 **EVAL RESULTS** | Full evaluation metrics, confusion matrix, honest external benchmark |
-| 💹 **BUSINESS IMPACT** | ₹ recovered simulation vs manual collections |
-| 📂 **DATASET** | Browse VAADA dataset with dialect examples |
-| 💬 **WHATSAPP SIM** | Simulate a multi-day collections thread live |
-| 🔍 **RISK ANALYSIS** | Diagnose revenue leaks by region and DPD |
-| ⚖️ **VAADA VS MANUAL** | Side-by-side comparison with manual collections |
+The live demo is a two-part deployment:
+- **Frontend:** a custom "recovery ledger" interface hosted on **GitHub Pages** — permanent, static, always available.
+- **Backend:** a Flask API hosted on **Render**, running the real trained models (TF-IDF + LR classifier, CRF promise extractor, leakage-free recovery predictor) and calling the real Razorpay Test API to generate payment links.
+
+Type any Hinglish message, pick a region and tone, and run the pipeline — every result on the page (intent, extracted date/amount, recovery score, and the payment link) comes from the live models, not scripted data.
+
+> An earlier iteration of this project also shipped as a 7-tab Streamlit dashboard, kept here for reference: [vaada-hinglish-collections-ai.streamlit.app](https://vaada-hinglish-collections-ai.streamlit.app)
 
 ---
 
@@ -312,11 +313,11 @@ cd vaada
 # Install
 pip install -r requirements.txt
 
-# Run Streamlit app
-streamlit run app.py
+# Run the Flask API locally
+python3 api.py
 
-# Run pipeline demo
-python3 -m src.pipeline
+# Open docs/index.html in a browser, or serve it locally:
+cd docs && python3 -m http.server 8080
 
 # Retrain the baseline classifier
 python3 src/nlu/baseline.py
@@ -332,6 +333,9 @@ python3 -m src.eval.external_benchmark
 
 # Run risk analysis
 python3 -m src.analysis.risk_analyzer
+
+# The original Streamlit dashboard is also still runnable:
+streamlit run app.py
 ```
 
 ---
@@ -340,41 +344,47 @@ python3 -m src.analysis.risk_analyzer
 
 ```
 vaada/
-├── app.py                          # Streamlit app (7 tabs)
-├── COMPLIANCE.md                   # RBI / DPDP Act / legal notice pathway
+├── docs/                            # Live demo frontend (GitHub Pages)
+│   ├── index.html                   # "Recovery ledger" UI, wired to the live API
+│   ├── styles.css
+│   └── script.js
+├── api.py                           # Flask API wrapping the pipeline (deployed on Render)
+├── requirements-api.txt             # Minimal dependencies for the API deployment
+├── app.py                           # Original Streamlit app (7 tabs) — still runnable
+├── COMPLIANCE.md                    # RBI / DPDP Act / legal notice pathway
 ├── src/
-│   ├── pipeline.py                 # End-to-end pipeline + Razorpay API
+│   ├── pipeline.py                  # End-to-end pipeline + Razorpay API
 │   ├── nlu/
-│   │   ├── baseline.py             # TF-IDF + LR classifier (F1=0.9890)
-│   │   ├── ner_ptp.py              # CRF-based PTP extractor (94.68% date recall)
-│   │   ├── ptp_extractor.py        # Legacy regex extractor (kept for comparison)
-│   │   ├── recovery_predictor.py   # Leakage-free default likelihood scoring
-│   │   ├── multi_turn_tracker.py   # 5-day thread tracking
-│   │   ├── proactive_risk.py       # Early warning system
-│   │   ├── robustness.py           # Adversarial robustness testing
-│   │   └── evaluate_finetuned.py   # Fine-tuned model evaluation
+│   │   ├── baseline.py              # TF-IDF + LR classifier (F1=0.9890)
+│   │   ├── ner_ptp.py               # CRF-based PTP extractor (94.68% date recall)
+│   │   ├── ptp_extractor.py         # Legacy regex extractor (kept for comparison)
+│   │   ├── recovery_predictor.py    # Leakage-free default likelihood scoring
+│   │   ├── multi_turn_tracker.py    # 5-day thread tracking
+│   │   ├── proactive_risk.py        # Early warning system
+│   │   ├── robustness.py            # Adversarial robustness testing
+│   │   └── evaluate_finetuned.py    # Fine-tuned model evaluation
 │   ├── agent/
-│   │   └── razorpay_client.py      # Real Razorpay Test API
+│   │   └── razorpay_client.py       # Real Razorpay Test API (keys via env vars)
 │   ├── analysis/
-│   │   └── risk_analyzer.py        # Revenue leak diagnosis
+│   │   └── risk_analyzer.py         # Revenue leak diagnosis
 │   ├── datagen/
-│   │   ├── llm_generate.py         # LLM-based data generation
-│   │   └── augment.py              # Augmentation to 9,693 samples
+│   │   ├── llm_generate.py          # LLM-based data generation
+│   │   └── augment.py               # Augmentation to 9,693 samples
 │   └── eval/
-│       ├── real_validation.py      # 20 real test cases with API
-│       └── external_benchmark.py   # Independent real-Hinglish generalization check
+│       ├── real_validation.py       # 20 real test cases with API
+│       └── external_benchmark.py    # Independent real-Hinglish generalization check
 ├── models/
-│   ├── baseline_pipeline.pkl       # Trained baseline (TF-IDF + LR)
-│   ├── ptp_crf.pkl                 # Trained CRF PTP extractor
-│   └── recovery_predictor.pkl      # Leakage-free recovery predictor
+│   ├── baseline_pipeline.pkl        # Trained baseline (TF-IDF + LR)
+│   ├── ptp_crf.pkl                  # Trained CRF PTP extractor
+│   └── recovery_predictor.pkl       # Leakage-free recovery predictor
 ├── outputs/
 │   ├── baseline_results.json
-│   ├── ner_results.json            # CRF vs regex comparison
-│   ├── real_validation.json        # 85% accuracy on real cases
-│   ├── recovery_results.json       # Leakage-free F1=0.6287
+│   ├── ner_results.json             # CRF vs regex comparison
+│   ├── real_validation.json         # 85% accuracy on real cases
+│   ├── recovery_results.json        # Leakage-free F1=0.6287
 │   ├── risk_analysis.json
-│   └── robustness_results.json     # 66.7% adversarial handling
-└── architecture.md                 # Detailed architecture
+│   └── robustness_results.json      # 66.7% adversarial handling
+└── architecture.md                  # Detailed architecture
 ```
 
 ---
@@ -410,7 +420,9 @@ conversation/month scenario:
 | PTP Extraction | Conditional Random Field · sklearn-crfsuite |
 | Recovery Model | Logistic Regression (leakage-free, 5-fold CV) |
 | Payment API | **Razorpay Test-mode REST API** (real links) |
-| Frontend | Streamlit · Streamlit Cloud |
+| Frontend | Custom HTML/CSS/JS · GitHub Pages |
+| Backend API | Flask + gunicorn · Render |
+| Legacy Frontend | Streamlit · Streamlit Cloud |
 | Training | Kaggle T4 GPU · 3 epochs · 84.9% token accuracy |
 
 ---
@@ -428,8 +440,9 @@ VAADA is built for India's regulated fintech environment.
 ```
 v1.0  ✅  Hinglish NLU + Razorpay API + 7-tab Streamlit app
 v1.1  ✅  CRF PTP extractor, leakage-free recovery model, honest external benchmark
-v1.2  →   WhatsApp Business API integration
-v1.3  →   Gemma-3-1B inference endpoint deployment
+v1.2  ✅  Custom frontend on GitHub Pages, Flask API permanently deployed on Render
+v1.3  →   WhatsApp Business API integration
+v1.4  →   Gemma-3-1B inference endpoint deployment
 v2.0  →   Tamil, Telugu, Marathi language support
 v2.1  →   Voice-to-text + Hinglish NLU unified pipeline
 v3.0  →   VAADA + Vulcan unified collections intelligence API
@@ -457,5 +470,4 @@ v3.0  →   VAADA + Vulcan unified collections intelligence API
 *"Vulcan routes payments. VAADA understands people."*
 
 </div>
-
-
+```
