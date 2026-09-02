@@ -1,6 +1,3 @@
-Here's the complete updated README — copy this directly and paste it into GitHub's editor to replace the whole file:
-
-```markdown
 <div align="center">
 
 <pre align="center">
@@ -470,4 +467,3 @@ v3.0  →   VAADA + Vulcan unified collections intelligence API
 *"Vulcan routes payments. VAADA understands people."*
 
 </div>
-```
